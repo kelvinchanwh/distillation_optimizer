@@ -40,6 +40,10 @@ class Model:
         self.feed_stage = feed_stage
         self.P_cond = P_cond
         self.P_drop = P_drop
+
+        # Create COM object
+        self.obj = win32.Dispatch("Apwn.Document")
+        self.obj.InitFromArchive2(self.filepath)
         
     
     def set_parameters(self, filepath, components, z_feed, T, P, F, calculation_type, N, \
@@ -59,12 +63,14 @@ class Model:
         self.feed_stage = feed_stage
         self.P_cond = P_cond
         self.P_drop = P_drop
+    
+    def set_raw(self, path, value):
+        self.obj.Tree.FindNode(path).Value = value
+
+    def get_raw(self, path):
+        return self.obj.Tree.FindNode(path).value
 
     def run(self):
-        # Create COM object
-        self.obj = win32.Dispatch("Apwn.Document")
-        self.obj.InitFromArchive2(self.filepath)
-
         # Set input parameters
         # Input Stream (Stream 1)
         self.obj.Tree.FindNode("\Data\Streams\1\Input\TEMP\MIXED").Value = self.T
@@ -85,9 +91,8 @@ class Model:
         self.obj.Tree.FindNode("\Data\Blocks\B1\Input\PRES1").Value = self.P_cond
         self.obj.Tree.FindNode("\Data\Blocks\B1\Input\DP_STAGE").Value = self.P_drop
 
-
         # Run model
-        self.obj.Run()
+        self.obj.Run2()
         
         # Get output parameters
         self.z_feed_out = self.obj.GetParameter("z_feed")
