@@ -2,7 +2,7 @@ import os
 import model as m
 
 model = m.Model ( 
-    filepath = os.path.join(os.path.curdir(), 'Simulation 1.apwz'), 
+    filepath = os.path.join(os.getcwd(), 'Simulation 1.bkp'), 
     components = ["BENZENE", "TOLUENE"], 
     z_feed = [70, 30], # % 
     T = 300, # K
