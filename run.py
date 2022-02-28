@@ -1,12 +1,23 @@
-model = am.Model(
-    components=['Benzene', 'Toluene'],
-    F=100., # kmol/h
-    P=112000, # Pa
-    P_drop = 0, # Pa
-    z_feed = [0.7, 0.3],
-    E = [1. for i in range(36)],
-    RR=0.924,
-    D=63.636,
-    N=34,
-    feed_stage=22,
+import os
+import model as m
+
+model = m.Model ( 
+    filepath = os.path.join(os.path.curdir(), 'Simulation 1.apwz'), 
+    components = ["BENZENE", "TOLUENE"], 
+    z_feed = [70, 30], # % 
+    T = 300, # K
+    P = 1.12, # bar
+    F = 100, # kmol/hr
+    calculation_type = 'EQUILIBRIUM', 
+    N = 36,
+    condenser_type = 'TOTAL', 
+    reboiler_type = 'KETTLE',
+    RR = 0.924, 
+    D = 63.636, 
+    feed_stage = 23, 
+    P_cond = 1.12, #bar 
+    P_drop = 0,
 )
+
+model.run()
+print (model.z_feed_out)
