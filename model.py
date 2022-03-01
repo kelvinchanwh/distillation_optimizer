@@ -2,8 +2,8 @@ import os
 import win32com.client as win32
 
 class Model:
-    def __init__(self, filepath, components, z_feed, T, P, F, calculation_type, N, \
-        condenser_type, reboiler_type, RR, D, feed_stage, P_cond, P_drop):
+    def __init__(self, filepath, components, z_feed, T = 300, P = 1., F = 100, calculation_type = 'EQUILIBRIUM', N = 36, \
+        condenser_type = 'TOTAL', reboiler_type = 'KETTLE', RR = 1.0, D = 63.636, feed_stage = 23, P_cond = 1.0, P_drop = 0):
         """
         :param filepath: path to the model file
         :param base_method: base method for the model (e.g. 'IDEAL','PENG-ROB',...)
