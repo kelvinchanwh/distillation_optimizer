@@ -61,9 +61,9 @@ class Model:
         # Check if node has children
         if node.AttributeValue(38):
             for child in node.Elements:
-                output[child.Name] = self.getLeafs(path + "\\" + child)
+                output[child.Name] = self.getLeafs(path + "\\" + child.Name)
         else:
-            output[node.Name] =  node.Value
+            output =  node.Value
         return output
 
     def run(self):
