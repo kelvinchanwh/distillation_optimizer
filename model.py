@@ -56,15 +56,14 @@ class Model:
         return self.obj.Tree.FindNode(path).value
 
     def getLeafs(self, path):
-        cacheList = list()
+        output = dict()
         node = self.obj.Tree.FindNode(path)
-        if node.HasChildren:
-            output = list()
+        # Check if node has children
+        if node.AttributeValue(38):
             for child in node.Elements:
-                self.getLeafs(path + "\\" + child)
-            return output
+                output[child.Name] = self.getLeafs(path + "\\" + child)
         else:
-            output =  node.Value
+            output[node.Name] =  node.Value
         return output
 
     def run(self):
@@ -143,12 +142,13 @@ class Model:
                 "MWMX", "MOLEFLMX", "MOLEFLOW", "MOLEFRAC", "MASSFLMX", "MASSFLOW", "MASSFRAC", \
                     "VOLFLMX"]
         
-        self.blockOutputList = []
-        self.streamOutputList = []
+        self.blockOutput = dict()
+        self.streamOutput = dict()
         
         # Get output values
         for var in blockOutput:
-            self.blockOutput[var] = self.getLeafs(var)
+            self.blockOutput[var] = self.getLeafs("\\Data\\Blocks\\B1\\Output\\" + var)
         
-        for var in streamOutput:
-            self.streamOutput[var] = self.getLeafs(var)
+        for i in range(1, 4):
+            for var in streamOutput:
+                self.streamOutput[var] = self.getLeafs("\\Data\\Streams\\" + str(i) + "\\Output\\" + var)
