@@ -1,11 +1,10 @@
-from operator import contains
 import numpy as np
 import pandas as pd
 import os
 import model
 import scipy.optimize as opt
 
-class optimizer():
+class Optimizer():
     def __init__(self, model, max_k = 100, max_line = 100, max_j = 100, opt_tolerance = 0.01):
         self.k = 0
         self.j = 0
@@ -74,9 +73,9 @@ class optimizer():
 
     def ptc_optimize(self):
         x0 = self.x_kj
-        x_opt = opt.minimize(self.ptc_objective, x0, method='SLSQP', options={'disp': True})
+        x_opt = opt.minimize(self.ptc_objective, x0, method='SLSQP', options={'disp': True}, tol = self.opt_tolerance)
 
-    def main(self):
+    def run(self):
         while self.j < self.max_j:
             self.steady_state_sim()
             self.nlp_optimize()
