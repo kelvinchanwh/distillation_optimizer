@@ -2,9 +2,9 @@ import os
 import win32com.client as win32
 
 class Model:
-    def __init__(self, filepath, components, z_feed, T_feed = 300, P_feed = 1., F = 100, D = 63.636, \
-        P_cond = 1.0, P_drop = 0, RR = 1.0, N = 36, feed_stage = 23, \
-        calculation_type = 'EQUILIBRIUM', condenser_type = 'TOTAL', reboiler_type = 'KETTLE'):
+    def __init__(self, filepath: str, components: list, z_feed: list, T_feed: float = 300, P_feed: float = 1., F: float = 0, D: float = 0, \
+        P_cond: float = 1.0, P_drop: float = 0, RR: float = 1.0, N: float = 36, feed_stage: float = 23, \
+        calculation_type: str = 'EQUILIBRIUM', condenser_type: str = 'TOTAL', reboiler_type: str = 'KETTLE'):
         """
         Design Parameters
         :param filepath: path to the model file
@@ -51,9 +51,9 @@ class Model:
         self.obj.InitFromArchive2(self.filepath)
         
     
-    def set_parameters(self, filepath, components, z_feed, T_feed, P_feed, F, D, \
-        P_cond = 1.0, P_drop = 0, RR = 1.0, N = 36, feed_stage = 23, \
-        calculation_type = 'EQUILIBRIUM', condenser_type = 'TOTAL', reboiler_type = 'KETTLE'):
+    def set_parameters(self, filepath: str, components: list, z_feed: list, T_feed: float = 300, P_feed: float = 1., F: float = 0, D: float = 0, \
+        P_cond: float = 1.0, P_drop: float = 0, RR: float = 1.0, N: float = 36, feed_stage: float = 23, \
+        calculation_type: str = 'EQUILIBRIUM', condenser_type: str = 'TOTAL', reboiler_type: str = 'KETTLE'):
 
         self.filepath = filepath
         self.components = components
@@ -73,7 +73,7 @@ class Model:
         self.condenser_type = condenser_type
         self.reboiler_type = reboiler_type
 
-    def update_manipulated(self, P_cond = None, P_drop = None, RR = None, N = None, feed_stage = None):
+    def update_manipulated(self, P_cond: float = None, P_drop: float = None, RR: float = None, N: float = None, feed_stage: float = None):
         if P_cond is not None:
             self.P_cond = P_cond
         if P_drop is not None:
@@ -109,23 +109,23 @@ class Model:
         """
         # Set input parameters
         # Input Stream (Stream 1)
-        self.obj.Tree.FindNode("\Data\Streams\1\Input\TEMP\MIXED").Value = self.T_feed
-        self.obj.Tree.FindNode("\Data\Streams\1\Input\PRES\MIXED").Value = self.P_feed
-        self.obj.Tree.FindNode("\Data\Streams\1\Input\TOTFLOW\MIXED").Value = self.F
+        self.obj.Tree.FindNode(r"\Data\Streams\1\Input\TEMP\MIXED").Value = self.T_feed
+        self.obj.Tree.FindNode(r"\Data\Streams\1\Input\PRES\MIXED").Value = self.P_feed
+        self.obj.Tree.FindNode(r"\Data\Streams\1\Input\TOTFLOW\MIXED").Value = self.F
         assert self.z_feed.sum() == 100 # mole fractions must sum to 100%
         for component in self.components:
             self.obj.Tree.FindNode("\Data\Streams\1\Input\FLOW\MIXED\%s"%component.upper()).Value = self.z_feed[self.components.index(component)]
 
         # Column
-        self.obj.Tree.FindNode("\Data\Blocks\B1\Input\CALC_MODE").Value = self.calculation_type
-        self.obj.Tree.FindNode("\Data\Blocks\B1\Input\NSTAGE").Value = self.N
-        self.obj.Tree.FindNode("\Data\Blocks\B1\Input\CONDENSER").Value = self.condenser_type
-        self.obj.Tree.FindNode("\Data\Blocks\B1\Input\REBOILER").Value = self.reboiler_type
-        self.obj.Tree.FindNode("\Data\Blocks\B1\Input\BASIS_D").Value = self.D
-        self.obj.Tree.FindNode("\Data\Blocks\B1\Input\BASIS_RR").Value = self.RR
-        self.obj.Tree.FindNode("\Data\Blocks\B1\Input\FEED_STAGE\1").Value = self.feed_stage
-        self.obj.Tree.FindNode("\Data\Blocks\B1\Input\PRES1").Value = self.P_cond
-        self.obj.Tree.FindNode("\Data\Blocks\B1\Input\DP_STAGE").Value = self.P_drop
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\CALC_MODE").Value = self.calculation_type
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\NSTAGE").Value = self.N
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\CONDENSER").Value = self.condenser_type
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\REBOILER").Value = self.reboiler_type
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\BASIS_D").Value = self.D
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\BASIS_RR").Value = self.RR
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\FEED_STAGE\1").Value = self.feed_stage
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES1").Value = self.P_cond
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\DP_STAGE").Value = self.P_drop
 
         # Run model
         self.obj.Run2()
