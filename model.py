@@ -2,18 +2,12 @@ import os
 import win32com.client as win32
 
 class Model:
-    def __init__(self, filepath: str, components: list, z_feed: list, T_feed: float = 300, P_feed: float = 1., F: float = 0, D: float = 0, \
-        P_cond: float = 1.0, P_drop: float = 0, RR: float = 1.0, N: float = 36, feed_stage: float = 23, \
-        calculation_type: str = 'EQUILIBRIUM', condenser_type: str = 'TOTAL', reboiler_type: str = 'KETTLE'):
+    def __init__(self, filepath: str, components: list, \
+        P_cond: float = None, P_drop: float = None, RR: float = None, N: float = None, feed_stage: float = None):
         """
         Design Parameters
         :param filepath: path to the model file
-        :param components: list of component names
-        :param z_feed: mole fractions of each component, ordered [%]
-        :param T_feed: feed temperature [K]
-        :param P_feed: feed pressure, [bar]
-        :param F: feed molar flow rate [kmol/hr]
-        :param D: distillate molar flow rate [kmol/hr]
+        :param components: list of component names [ordered]
 
         Manipulated Variables
         :param P_cond: condenser pressure [bar]
@@ -21,69 +15,39 @@ class Model:
         :param RR: reflux ratio (L/D)
         :param N: number of stages
         :param feed_stage: stage number of the input feed [on-stage]
-
-        Model Parameters
-        :param calculation_type: 'EQUILIBRIUM' or 'RIG-RATE'
-        :param condenser_type: 'TOTAL' or 'PARTIAL-V' or 'PARTIAL-V-L' or 'NONE'
-        :param reboiler_type: 'KETTLE' or 'THERMOSYPHON' or 'NONE'
         """
 
+        # Initialize variables
         self.filepath = filepath
         self.components = components
-        self.z_feed = z_feed
-        self.T_feed = T_feed
-        self.P_feed = P_feed
-        self.F = F
-        self.D = D
 
-        self.P_cond = P_cond
-        self.P_drop = P_drop
-        self.RR = RR
-        self.N = N
-        self.feed_stage = feed_stage
-
-        self.calculation_type = calculation_type
-        self.condenser_type = condenser_type
-        self.reboiler_type = reboiler_type
+        self.P_cond = P_cond if P_cond is not None else self.init_var()["P_cond"]
+        self.P_drop = P_drop if P_drop is not None else self.init_var()["P_drop"]
+        self.RR = RR if RR is not None else self.init_var()["RR"]
+        self.N = N if N is not None else self.init_var()["N"]
+        self.feed_stage = feed_stage if feed_stage is not None else self.init_var()["feed_stage"]
 
         # Create COM object
         self.obj = win32.Dispatch("Apwn.Document")
         self.obj.InitFromArchive2(self.filepath)
         
-    
-    def set_parameters(self, filepath: str, components: list, z_feed: list, T_feed: float = 300, P_feed: float = 1., F: float = 0, D: float = 0, \
-        P_cond: float = 1.0, P_drop: float = 0, RR: float = 1.0, N: float = 36, feed_stage: float = 23, \
-        calculation_type: str = 'EQUILIBRIUM', condenser_type: str = 'TOTAL', reboiler_type: str = 'KETTLE'):
-
-        self.filepath = filepath
-        self.components = components
-        self.z_feed = z_feed
-        self.T_feed = T_feed
-        self.P_feed = P_feed
-        self.F = F
-        self.D = D
-
-        self.P_cond = P_cond
-        self.P_drop = P_drop
-        self.RR = RR
-        self.N = N
-        self.feed_stage = feed_stage
-
-        self.calculation_type = calculation_type
-        self.condenser_type = condenser_type
-        self.reboiler_type = reboiler_type
+    def init_var(self):
+        # Get initial values
+        return dict(
+            P_cond = 1.12, #bar 
+            P_drop = 0,
+            RR = 0.924, 
+            N = 36,
+            feed_stage = 23, 
+        )
 
     def update_manipulated(self, P_cond: float = None, P_drop: float = None, RR: float = None, N: float = None, feed_stage: float = None):
-        if P_cond is not None:
-            self.P_cond = P_cond
-        if P_drop is not None:
-            self.P_drop = P_drop
-        if RR is not None:
-            self.RR = RR
-        if N is not None:
-            self.N = N
-        if feed_stage is not None:
-            self.feed_stage = feed_stage
+        # Update manipulated variables
+        self.P_cond = P_cond if P_cond is not None else self.P_cond
+        self.P_drop = P_drop if P_drop is not None else self.P_drop
+        self.RR = RR if RR is not None else self.RR
+        self.N = N if N is not None else self.N
+        self.feed_stage = feed_stage if feed_stage is not None else self.feed_stage
     
     def set_raw(self, path, value):
         self.obj.Tree.FindNode(path).Value = value
@@ -93,39 +57,18 @@ class Model:
 
     def run(self):
         """
-        Intermediate Variables
-        :param L: liquid molar flow rate [kmol/hr]
-        :param V: vapor molar flow rate [kmol/hr]
-        :param x: liquid composition of each component, ordered [%]
-        :param y: liquid composition of each component, ordered [%]
-        :param h: liquid enthalpy [kJ/kmol]
-        :param H: vapor enthalpy [kJ/kmol]
-
         Responding Variables
         :param T_stage: temperature of each stage [K]
         :param diameter: diameter of each stage [m]
         :param Q_cond: condenser duty [kW]
         :param Q_reb: reboiler duty [kW]
         """
-        # Set input parameters
-        # Input Stream (Stream 1)
-        self.obj.Tree.FindNode(r"\Data\Streams\1\Input\TEMP\MIXED").Value = self.T_feed
-        self.obj.Tree.FindNode(r"\Data\Streams\1\Input\PRES\MIXED").Value = self.P_feed
-        self.obj.Tree.FindNode(r"\Data\Streams\1\Input\TOTFLOW\MIXED").Value = self.F
-        assert self.z_feed.sum() == 100 # mole fractions must sum to 100%
-        for component in self.components:
-            self.obj.Tree.FindNode("\Data\Streams\1\Input\FLOW\MIXED\%s"%component.upper()).Value = self.z_feed[self.components.index(component)]
-
-        # Column
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\CALC_MODE").Value = self.calculation_type
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\NSTAGE").Value = self.N
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\CONDENSER").Value = self.condenser_type
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\REBOILER").Value = self.reboiler_type
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\BASIS_D").Value = self.D
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\BASIS_RR").Value = self.RR
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\FEED_STAGE\1").Value = self.feed_stage
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES1").Value = self.P_cond
+        # Set manipulated variables in Aspen
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\DP_STAGE").Value = self.P_drop
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES1").Value = self.P_cond
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\BASIS_RR").Value = self.RR
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\NSTAGE").Value = self.N
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\FEED_STAGE\1").Value = self.feed_stage
 
         # Run model
         self.obj.Run2()
