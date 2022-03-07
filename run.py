@@ -12,4 +12,4 @@ model = m.Model (
 )
 
 model.run()
-print (model.z_feed_out)
+# print (model.z_feed_out)
