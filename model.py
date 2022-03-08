@@ -3,7 +3,7 @@ import win32com.client as win32
 
 class Model:
     def __init__(self, filepath: str, components: list, \
-        P_cond: float = None, P_drop: float = None, RR: float = None, N: float = None, feed_stage: float = None):
+        P_cond: float = None, P_drop: float = None, RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None):
         """
         Design Parameters
         :param filepath: path to the model file
@@ -15,6 +15,7 @@ class Model:
         :param RR: reflux ratio (L/D)
         :param N: number of stages
         :param feed_stage: stage number of the input feed [on-stage]
+        :param tray_spacing: tray spacing [m]
         """
 
         # Initialize variables
@@ -26,6 +27,7 @@ class Model:
         self.RR = RR if RR is not None else self.init_var()["RR"]
         self.N = N if N is not None else self.init_var()["N"]
         self.feed_stage = feed_stage if feed_stage is not None else self.init_var()["feed_stage"]
+        self.tray_spacing = tray_spacing if tray_spacing is not None else self.init_var()["tray_spacing"]
 
         # Create COM object
         self.obj = win32.Dispatch("Apwn.Document")
@@ -39,15 +41,17 @@ class Model:
             RR = 0.924, 
             N = 36,
             feed_stage = 23, 
+            tray_spacing = 0.6096
         )
 
-    def update_manipulated(self, P_cond: float = None, P_drop: float = None, RR: float = None, N: float = None, feed_stage: float = None):
+    def update_manipulated(self, P_cond: float = None, P_drop: float = None, RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None):
         # Update manipulated variables
         self.P_cond = P_cond if P_cond is not None else self.P_cond
         self.P_drop = P_drop if P_drop is not None else self.P_drop
         self.RR = RR if RR is not None else self.RR
         self.N = N if N is not None else self.N
         self.feed_stage = feed_stage if feed_stage is not None else self.feed_stage
+        self.tray_spacing = tray_spacing if tray_spacing is not None else self.tray_spacing
     
     def set_raw(self, path, value):
         self.obj.Tree.FindNode(path).Value = value
@@ -80,6 +84,7 @@ class Model:
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\BASIS_RR").Value = self.RR
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\NSTAGE").Value = self.N
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\FEED_STAGE\1").Value = self.feed_stage
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\SubObjects\Tray Sizing\1\Input\TS_TSPACE\1").Value = self.tray_spacing
 
         # Run model
         self.obj.Run2()
@@ -152,3 +157,8 @@ class Model:
         for i in range(1, 4):
             for var in streamOutput:
                 self.streamOutput[var] = self.getLeafs("\\Data\\Streams\\" + str(i) + "\\Output\\" + var)
+
+        self.T_stage = [self.blockOutput["TOP_TEMP"]] + self.blockOutput["B_TEMP"].values + [self.blockOutput["BOTTOM_TEMP"]]
+        self.diameter = self.obj.Tree.FindNode(r"\Data\Blocks\B1\SubObjects\Tray Sizing\1\Output\DIAM4\1").Value
+        self.Q_cond = self.blockOutput["COND_DUTY"]
+        self.Q_reb = self.blockOutput["REB_DUTY"]
