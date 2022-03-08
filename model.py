@@ -89,10 +89,10 @@ class Model:
         # Check if stage pressure overlaps
         return (True if (self.P_start_1 >= 1 and self.P_end_1 < self.P_start_2 and self.P_end_2 <= self.N) else False)
     
-    def set_raw(self, path, value):
+    def setValue(self, path, value):
         self.obj.Tree.FindNode(path).Value = value
 
-    def get_raw(self, path):
+    def getValue(self, path):
         return self.obj.Tree.FindNode(path).value
 
     def getLeafs(self, path):
@@ -116,29 +116,28 @@ class Model:
         """
         # Set manipulated variables in Aspen
         # Pressure
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES1").Value = self.P_cond
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\1").Value = self.P_start_1
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\2").Value = self.P_end_2
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PDROP_SEC\1").Value = self.P_drop_1
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PDROP_SEC\2").Value = self.P_drop_2
+        self.setValue(r"\Data\Blocks\B1\Input\PRES1", self.P_cond)
+        self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\1", self.P_start_1)
+        self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
+        self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\1", self.P_drop_1)
+        self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\2", self.P_drop_2)
         # If current 2nd start stage is smaller then upcoming 1st end stage, then set the upcoming 2nd start stage first
-        curr1end = self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\1").Value
-        curr2start = self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\2").Value
+        curr2start = self.getValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2")
         if (self.P_end_1 > curr2start):
-            self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\2").Value = self.P_start_2
-            self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\1").Value = self.P_end_1
+            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2", self.P_start_2)
+            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\1", self.P_end_1)
         else:
-            self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\1").Value = self.P_end_1
-            self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\2").Value = self.P_start_2
+            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\1", self.P_end_1)
+            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2", self.P_start_2)
 
         
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\BASIS_RR").Value = self.RR
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\NSTAGE").Value = self.N
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\FEED_STAGE\1").Value = self.feed_stage
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_TSPACE\1").Value = self.tray_spacing
+        self.setValue(r"\Data\Blocks\B1\Input\BASIS_RR", self.RR)
+        self.setValue(r"\Data\Blocks\B1\Input\NSTAGE", self.N)
+        self.setValue(r"\Data\Blocks\B1\Input\FEED_STAGE\1", self.feed_stage)
+        self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_TSPACE\1", self.tray_spacing)
         # Hydraulic Ending Stage = N - 1
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_STAGE2\1").Value = self.N - 1
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_NPASS\1").Value = self.num_pass
+        self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_STAGE2\1", self.N - 1)
+        self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_NPASS\1", self.num_pass)
 
         # Reinit before run
         self.obj.Reinit()
@@ -216,6 +215,8 @@ class Model:
                 self.streamOutput[var] = self.getLeafs("\\Data\\Streams\\" + str(i) + "\\Output\\" + var)
 
         self.T_stage = list(self.blockOutput["B_TEMP"].values())
-        self.diameter = self.obj.Tree.FindNode(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Output\DIAM4\1").Value
+        self.diameter = self.getValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Output\DIAM4\1")
         self.Q_cond = self.blockOutput["COND_DUTY"]
         self.Q_reb = self.blockOutput["REB_DUTY"]
+
+        self.converge = True if self.getValue(r"\Data\Results Summary\Run-Status\Output|PCESSTAT") == 1 else False
