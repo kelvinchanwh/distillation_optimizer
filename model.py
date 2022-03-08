@@ -47,9 +47,9 @@ class Model:
 
         # Create COM object
         self.obj = win32.Dispatch("Apwn.Document")
+        self.obj.InitFromArchive2(self.filepath)
         self.obj.Visible = 1
         self.obj.SuppressDialogs = 1
-        self.obj.InitFromArchive2(self.filepath)
         
     def init_var(self):
         # Get initial values
