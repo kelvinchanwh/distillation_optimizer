@@ -3,7 +3,8 @@ import win32com.client as win32
 
 class Model:
     def __init__(self, filepath: str, components: list, \
-        P_cond: float = None, P_drop: float = None, RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None):
+        P_cond: float = None, P_start_1: int = None, P_start_2: int = None, P_end_1: int = None, P_end_2: int = None, P_drop_1: float = None, P_drop_2: float = None, \
+            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None):
         """
         Design Parameters
         :param filepath: path to the model file
@@ -11,7 +12,12 @@ class Model:
 
         Manipulated Variables
         :param P_cond: condenser pressure [bar]
-        :param P_drop: pressure drop per stage, [bar]
+        :param P_start_1: start stage of first section
+        :param P_start_2: start stage of second section
+        :param P_end_1: end stage of first section
+        :param P_end_2: end stage of second section
+        :param P_drop_1: pressure drop per stage of first section, [bar]
+        :param P_drop_2: pressure drop per stage of second section, [bar]
         :param RR: reflux ratio (L/D)
         :param N: number of stages
         :param feed_stage: stage number of the input feed [on-stage]
@@ -23,13 +29,18 @@ class Model:
         self.filepath = filepath
         self.components = components
 
-        self.P_cond = P_cond if P_cond is not None else self.init_var()["P_cond"]
-        self.P_drop = P_drop if P_drop is not None else self.init_var()["P_drop"]
         self.RR = RR if RR is not None else self.init_var()["RR"]
         self.N = N if N is not None else self.init_var()["N"]
         self.feed_stage = feed_stage if feed_stage is not None else self.init_var()["feed_stage"]
         self.tray_spacing = tray_spacing if tray_spacing is not None else self.init_var()["tray_spacing"]
         self.num_pass = num_pass if num_pass is not None else self.init_var()["num_pass"]
+        self.P_cond = P_cond if P_cond is not None else self.init_var()["P_cond"]
+        self.P_start_1 = P_start_1 if P_start_1 is not None else self.init_var()["P_start_1"]
+        self.P_start_2 = P_start_2 if P_start_2 is not None else self.init_var()["P_start_2"]
+        self.P_end_1 = P_end_1 if P_end_1 is not None else self.init_var()["P_end_1"]
+        self.P_end_2 = P_end_2 if P_end_2 is not None else self.init_var()["P_end_2"]
+        self.P_drop_1 = P_drop_1 if P_drop_1 is not None else self.init_var()["P_drop_1"]
+        self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.init_var()["P_drop_2"]
 
         # Create COM object
         self.obj = win32.Dispatch("Apwn.Document")
@@ -38,23 +49,35 @@ class Model:
     def init_var(self):
         # Get initial values
         return dict(
-            P_cond = 1.12, #bar 
-            P_drop = 0,
             RR = 0.924, 
             N = 36,
             feed_stage = 23, 
-            tray_spacing = 0.6096
-            num_pass = 4
+            tray_spacing = 0.6096,
+            num_pass = 4,
+            P_cond = 1.12, #bar
+            P_start_1 = 2,
+            P_start_2 = self.feed_stage + 1,
+            P_end_1 = self.feed_stage - 1,
+            P_end_2 = self.N - 1,
+            P_drop_1 = 0,
+            P_drop_2 = 0,
         )
 
-    def update_manipulated(self, P_cond: float = None, P_drop: float = None, RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None):
+    def update_manipulated(self, P_cond: float = None, P_start_1: int = None, P_start_2: int = None, P_end_1: int = None, P_end_2: int = None, P_drop_1: float = None, P_drop_2: float = None, \
+            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None):
         # Update manipulated variables
-        self.P_cond = P_cond if P_cond is not None else self.P_cond
-        self.P_drop = P_drop if P_drop is not None else self.P_drop
         self.RR = RR if RR is not None else self.RR
         self.N = N if N is not None else self.N
         self.feed_stage = feed_stage if feed_stage is not None else self.feed_stage
         self.tray_spacing = tray_spacing if tray_spacing is not None else self.tray_spacing
+        self.num_pass = num_pass if num_pass is not None else self.num_pass
+        self.P_cond = P_cond if P_cond is not None else self.P_cond
+        self.P_start_1 = P_start_1 if P_start_1 is not None else self.P_start_1
+        self.P_start_2 = P_start_2 if P_start_2 is not None else self.P_start_2
+        self.P_end_1 = P_end_1 if P_end_1 is not None else self.P_end_1
+        self.P_end_2 = P_end_2 if P_end_2 is not None else self.P_end_2
+        self.P_drop_1 = P_drop_1 if P_drop_1 is not None else self.P_drop_1
+        self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.P_drop_2
     
     def set_raw(self, path, value):
         self.obj.Tree.FindNode(path).Value = value
@@ -82,15 +105,24 @@ class Model:
         :param Q_reb: reboiler duty [kW]
         """
         # Set manipulated variables in Aspen
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\DP_STAGE").Value = self.P_drop
+        # Pressure
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES1").Value = self.P_cond
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\1").Value = self.P_start_1
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\1").Value = self.P_end_1
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\2").Value = self.P_start_2
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\2").Value = self.P_end_2
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PDROP_SEC\1").Value = self.P_drop_1
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PDROP_SEC\2").Value = self.P_drop_2
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\BASIS_RR").Value = self.RR
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\NSTAGE").Value = self.N
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\FEED_STAGE\1").Value = self.feed_stage
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_TSPACE\1").Value = self.tray_spacing
         # Hydraulic Ending Stage = N - 1
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_TSTAGE2\1").Value = self.N - 1
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_STAGE2\1").Value = self.N - 1
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_NPASS\1").Value = self.num_pass
+
+        # Reinit before run
+        self.obj.Reinit()
 
         # Run model
         self.obj.Run2()
@@ -164,7 +196,7 @@ class Model:
             for var in streamOutput:
                 self.streamOutput[var] = self.getLeafs("\\Data\\Streams\\" + str(i) + "\\Output\\" + var)
 
-        self.T_stage = [self.blockOutput["TOP_TEMP"]] + self.blockOutput["B_TEMP"].values + [self.blockOutput["BOTTOM_TEMP"]]
-        self.diameter = self.obj.Tree.FindNode(r"\Data\Blocks\B1\SubObjects\Tray Sizing\1\Output\DIAM4\1").Value
+        self.T_stage = list(self.blockOutput["B_TEMP"].values())
+        self.diameter = self.obj.Tree.FindNode(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Output\DIAM4\1").Value
         self.Q_cond = self.blockOutput["COND_DUTY"]
         self.Q_reb = self.blockOutput["REB_DUTY"]
