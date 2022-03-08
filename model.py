@@ -3,7 +3,7 @@ import win32com.client as win32
 
 class Model:
     def __init__(self, filepath: str, components: list, \
-        P_cond: float = None, P_drop: float = None, RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None):
+        P_cond: float = None, P_drop: float = None, RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None):
         """
         Design Parameters
         :param filepath: path to the model file
@@ -16,6 +16,7 @@ class Model:
         :param N: number of stages
         :param feed_stage: stage number of the input feed [on-stage]
         :param tray_spacing: tray spacing [m]
+        :param num_pass: number of passes on each tray; max 4
         """
 
         # Initialize variables
@@ -28,6 +29,7 @@ class Model:
         self.N = N if N is not None else self.init_var()["N"]
         self.feed_stage = feed_stage if feed_stage is not None else self.init_var()["feed_stage"]
         self.tray_spacing = tray_spacing if tray_spacing is not None else self.init_var()["tray_spacing"]
+        self.num_pass = num_pass if num_pass is not None else self.init_var()["num_pass"]
 
         # Create COM object
         self.obj = win32.Dispatch("Apwn.Document")
@@ -42,6 +44,7 @@ class Model:
             N = 36,
             feed_stage = 23, 
             tray_spacing = 0.6096
+            num_pass = 4
         )
 
     def update_manipulated(self, P_cond: float = None, P_drop: float = None, RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None):
@@ -84,7 +87,10 @@ class Model:
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\BASIS_RR").Value = self.RR
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\NSTAGE").Value = self.N
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\FEED_STAGE\1").Value = self.feed_stage
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\SubObjects\Tray Sizing\1\Input\TS_TSPACE\1").Value = self.tray_spacing
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_TSPACE\1").Value = self.tray_spacing
+        # Hydraulic Ending Stage = N - 1
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_TSTAGE2\1").Value = self.N - 1
+        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_NPASS\1").Value = self.num_pass
 
         # Run model
         self.obj.Run2()
