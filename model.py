@@ -42,6 +42,9 @@ class Model:
         self.P_drop_1 = P_drop_1 if P_drop_1 is not None else self.init_var()["P_drop_1"]
         self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.init_var()["P_drop_2"]
 
+        # Ensure stage pressure does not overlap
+        assert self.stage_pressure_check(), "Stage pressure overlaps"
+
         # Create COM object
         self.obj = win32.Dispatch("Apwn.Document")
         self.obj.InitFromArchive2(self.filepath)
@@ -78,6 +81,13 @@ class Model:
         self.P_end_2 = P_end_2 if P_end_2 is not None else self.P_end_2
         self.P_drop_1 = P_drop_1 if P_drop_1 is not None else self.P_drop_1
         self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.P_drop_2
+
+        # Ensure stage pressure does not overlap
+        assert self.stage_pressure_check(), "Stage pressure overlaps"
+
+    def stage_pressure_check(self):
+        # Check if stage pressure overlaps
+        return (True if (self.P_start_1 >= 1 and self.P_end_1 < self.P_start_2 and self.P_end_2 <= self.N) else False)
     
     def set_raw(self, path, value):
         self.obj.Tree.FindNode(path).Value = value
@@ -108,11 +118,19 @@ class Model:
         # Pressure
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES1").Value = self.P_cond
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\1").Value = self.P_start_1
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\1").Value = self.P_end_1
-        self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\2").Value = self.P_start_2
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\2").Value = self.P_end_2
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PDROP_SEC\1").Value = self.P_drop_1
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PDROP_SEC\2").Value = self.P_drop_2
+        # If current 2nd start stage is smaller then upcoming 1st end stage, then set the upcoming 2nd start stage first
+        curr1end = self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\1").Value
+        curr2start = self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\2").Value
+        if ((self.P_end_1 > curr2start) or (self.P_start_2 < curr1end)):
+            self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\1").Value = self.P_end_1
+            self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\2").Value = self.P_start_2
+        else:
+            self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\2").Value = self.P_start_2
+            self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\1").Value = self.P_end_1
+        
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\BASIS_RR").Value = self.RR
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\NSTAGE").Value = self.N
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\FEED_STAGE\1").Value = self.feed_stage
