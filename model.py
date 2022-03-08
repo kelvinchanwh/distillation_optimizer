@@ -47,6 +47,8 @@ class Model:
 
         # Create COM object
         self.obj = win32.Dispatch("Apwn.Document")
+        self.obj.Visible = 1
+        self.obj.SuppressDialogs = 1
         self.obj.InitFromArchive2(self.filepath)
         
     def init_var(self):
@@ -86,6 +88,9 @@ class Model:
         assert self.stage_pressure_check(), "Stage pressure overlaps"
 
     def stage_pressure_check(self):
+        # Minimum pressure drop is 0.01 bar
+        self.P_drop_1 = 0.01 if self.P_drop_1 == 0 else self.P_drop_1
+        self.P_drop_2 = 0.01 if self.P_drop_2 == 0 else self.P_drop_2
         # Check if stage pressure overlaps
         return (True if (self.P_start_1 >= 1 and self.P_end_1 < self.P_start_2 and self.P_end_2 <= self.N) else False)
     
@@ -219,4 +224,3 @@ class Model:
         self.Q_cond = self.blockOutput["COND_DUTY"]
         self.Q_reb = self.blockOutput["REB_DUTY"]
 
-        self.converge = True if self.getValue(r"\Data\Results Summary\Run-Status\Output|PCESSTAT") == 1 else False

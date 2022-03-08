@@ -9,8 +9,6 @@ model = m.Model (
     tray_spacing = 0.63636,
     feed_stage = 23,
     P_cond = 1.12,
-    P_drop_1 = 0.1, 
-    P_drop_2 = 0.2
 )
 
 model.run()
