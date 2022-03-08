@@ -124,12 +124,13 @@ class Model:
         # If current 2nd start stage is smaller then upcoming 1st end stage, then set the upcoming 2nd start stage first
         curr1end = self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\1").Value
         curr2start = self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\2").Value
-        if ((self.P_end_1 > curr2start) or (self.P_start_2 < curr1end)):
-            self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\1").Value = self.P_end_1
+        if (self.P_end_1 > curr2start):
             self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\2").Value = self.P_start_2
+            self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\1").Value = self.P_end_1
         else:
-            self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\2").Value = self.P_start_2
             self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE2\1").Value = self.P_end_1
+            self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\PRES_STAGE1\2").Value = self.P_start_2
+
         
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\BASIS_RR").Value = self.RR
         self.obj.Tree.FindNode(r"\Data\Blocks\B1\Input\NSTAGE").Value = self.N
