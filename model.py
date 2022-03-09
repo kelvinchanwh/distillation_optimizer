@@ -235,11 +235,11 @@ class Model:
     def calc_energy_cost(self, steam_type):
         energy_cost = 0.0
         # Energy cost
-        energy_cost = 0.354 * conversions.calPerSec_to_kJPerYear(self.Q_cond)
+        energy_cost = 0.354 * conversions.calPerSec_to_GJPerYear(self.Q_cond)
         if steam_type == "hp":
-            energy_cost += 9.88 * conversions.calPerSec_to_kJPerYear(self.Q_reb)
+            energy_cost += 9.88 * conversions.calPerSec_to_GJPerYear(self.Q_reb)
         else:
-            energy_cost += 7.78 * conversions.calPerSec_to_kJPerYear(self.Q_reb)
+            energy_cost += 7.78 * conversions.calPerSec_to_GJPerYear(self.Q_reb)
 
         return energy_cost
 
@@ -271,8 +271,8 @@ class Model:
 
         U_cond = 0.852
         U_reb = 0.568
-        A_cond = abs(self.Q_cond)/(U_cond * del_t_mean_cond)
-        A_reb = abs(self.Q_reb)/(U_reb * del_t_mean_reb)
+        A_cond = abs(conversions.calPerSec_to_kJPerSec(self.Q_cond))/(U_cond * del_t_mean_cond)
+        A_reb = abs(conversions.calPerSec_to_kJPerSec(self.Q_reb))/(U_reb * del_t_mean_reb)
 
         self.height = 1.2 * self.tray_spacing * self.N
 
