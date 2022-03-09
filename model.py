@@ -66,7 +66,7 @@ class Model:
             feed_stage = 23, 
             tray_spacing = 0.6096,
             num_pass = 4,
-            tray_eff = 0.7,
+            tray_eff = 0.5,
             P_cond = 1.12, #bar
             P_start_1 = 2,
             P_start_2 = self.feed_stage + 1,

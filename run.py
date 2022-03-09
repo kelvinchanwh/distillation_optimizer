@@ -12,4 +12,4 @@ model = m.Model (
 )
 
 print (model.run())
-model.obj.Close()
+# model.obj.Close()
