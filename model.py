@@ -1,10 +1,12 @@
 import os
 import win32com.client as win32
+import conversions
 
 class Model:
     def __init__(self, filepath: str, components: list, \
         P_cond: float = None, P_start_1: int = None, P_start_2: int = None, P_end_1: int = None, P_end_2: int = None, P_drop_1: float = None, P_drop_2: float = None, \
-            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None):
+            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, \
+            n_years: int = None):
         """
         Design Parameters
         :param filepath: path to the model file
@@ -23,6 +25,7 @@ class Model:
         :param feed_stage: stage number of the input feed [on-stage]
         :param tray_spacing: tray spacing [m]
         :param num_pass: number of passes on each tray; max 4
+        :param n_years: number of years to for payback period
         """
 
         # Initialize variables
@@ -45,6 +48,8 @@ class Model:
         # Ensure stage pressure does not overlap
         assert self.stage_pressure_check(), "Stage pressure overlaps"
 
+        self.n_years = n_years if n_years is not None else self.init_var()["n_years"]
+
         # Create COM object
         self.obj = win32.Dispatch("Apwn.Document")
         self.obj.InitFromArchive2(self.filepath)
@@ -66,10 +71,12 @@ class Model:
             P_end_2 = self.N - 1,
             P_drop_1 = 0,
             P_drop_2 = 0,
+            n_years = 4
         )
 
     def update_manipulated(self, P_cond: float = None, P_start_1: int = None, P_start_2: int = None, P_end_1: int = None, P_end_2: int = None, P_drop_1: float = None, P_drop_2: float = None, \
-            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None):
+            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, \
+                n_years: int = None):
         # Update manipulated variables
         self.RR = RR if RR is not None else self.RR
         self.N = N if N is not None else self.N
@@ -83,6 +90,7 @@ class Model:
         self.P_end_2 = P_end_2 if P_end_2 is not None else self.P_end_2
         self.P_drop_1 = P_drop_1 if P_drop_1 is not None else self.P_drop_1
         self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.P_drop_2
+        self.n_years = n_years if n_years is not None else self.n_years
 
         # Ensure stage pressure does not overlap
         assert self.stage_pressure_check(), "Stage pressure overlaps"
@@ -98,7 +106,7 @@ class Model:
         self.obj.Tree.FindNode(path).Value = value
 
     def getValue(self, path):
-        return self.obj.Tree.FindNode(path).value
+        return self.obj.Tree.FindNode(path).Value
 
     def getLeafs(self, path):
         output = dict()
@@ -111,7 +119,7 @@ class Model:
             output =  node.Value
         return output
 
-    def run(self):
+    def simulate(self):
         """
         Responding Variables
         :param T_stage: temperature of each stage [K]
@@ -224,3 +232,60 @@ class Model:
         self.Q_cond = self.blockOutput["COND_DUTY"]
         self.Q_reb = self.blockOutput["REB_DUTY"]
 
+    def calc_energy_cost(self, steam_type):
+        energy_cost = 0.0
+        # Energy cost
+        energy_cost = 0.354 * conversions.calPerSec_to_kJPerYear(self.Q_cond)
+        if steam_type == "hp":
+            energy_cost += 9.88 * conversions.calPerSec_to_kJPerYear(self.Q_reb)
+        else:
+            energy_cost += 7.78 * conversions.calPerSec_to_kJPerYear(self.Q_reb)
+
+        return energy_cost
+
+    def calc_tac(self):
+        # Calculate Total Annualized Cost
+        # Cooling Water
+        t_in_hot_cond = self.T_stage[1]
+        t_out_cold_cond = 35.0
+        t_out_hot_cond = self.T_stage[0]
+        t_in_cold_cond = 25.0
+        
+        # Steam
+        t_in_cold_reb = self.T_stage[-2]
+        t_out_cold_reb = self.T_stage[-1]
+        # T_in_cold_reb must be at least 10 deg C below T_in_cold_reb
+        if t_in_cold_reb > 160.0 - 10.0:
+            # Use hp steam temp
+            steam = "lp"
+            t_in_hot_reb = 254.0
+            t_out_hot_reb = 253.0
+        else:
+            # Use lp steam temp
+            steam = "hp"
+            t_in_hot_reb = 160.0
+            t_out_hot_reb = 159.0
+
+        del_t_mean_cond = (0.5 * (t_in_hot_cond - t_out_cold_cond) * (t_out_hot_cond - t_in_cold_cond) * (t_in_hot_cond - t_out_cold_cond + t_out_hot_cond - t_in_cold_cond)) ** (1./3)
+        del_t_mean_reb = (0.5 * (t_in_hot_reb - t_out_cold_reb) * (t_out_hot_reb - t_in_cold_reb) * (t_in_hot_reb - t_out_cold_reb + t_out_hot_reb - t_in_cold_reb)) ** (1./3)
+
+        U_cond = 0.852
+        U_reb = 0.568
+        A_cond = self.Q_cond/(U_cond * del_t_mean_cond)
+        A_reb = self.Q_reb/(U_reb * del_t_mean_reb)
+
+        self.height = 1.2 * self.tray_spacing * self.N
+
+        C_cap_cond = 7296 * (A_cond ** 0.65)
+        C_cap_reb = 7296 * (A_reb ** 0.65)
+        C_cap_hx = C_cap_cond + C_cap_reb
+        C_cap_col = 17640 * (self.diameter ** 1.066) * (self.height ** 0.802)
+
+        self.energy_cost = self.calc_energy_cost(steam)
+
+        self.TAC = ((C_cap_hx + C_cap_col) / self.n_years) + self.energy_cost
+
+    def run(self):
+        self.simulate()
+        self.calc_tac()
+        return self.TAC
