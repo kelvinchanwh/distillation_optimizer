@@ -5,7 +5,7 @@ import conversions
 class Model:
     def __init__(self, filepath: str, components: list, \
         P_cond: float = None, P_start_1: int = None, P_start_2: int = None, P_end_1: int = None, P_end_2: int = None, P_drop_1: float = None, P_drop_2: float = None, \
-            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, \
+            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, tray_eff: float = None, \
             n_years: int = None):
         """
         Design Parameters
@@ -25,6 +25,7 @@ class Model:
         :param feed_stage: stage number of the input feed [on-stage]
         :param tray_spacing: tray spacing [m]
         :param num_pass: number of passes on each tray; max 4
+        :param tray_eff: tray efficiency
         :param n_years: number of years to for payback period
         """
 
@@ -48,6 +49,7 @@ class Model:
         # Ensure stage pressure does not overlap
         assert self.stage_pressure_check(), "Stage pressure overlaps"
 
+        self.tray_eff = tray_eff if tray_eff is not None else self.init_var()["tray_eff"]
         self.n_years = n_years if n_years is not None else self.init_var()["n_years"]
 
         # Create COM object
@@ -64,6 +66,7 @@ class Model:
             feed_stage = 23, 
             tray_spacing = 0.6096,
             num_pass = 4,
+            tray_eff = 0.7,
             P_cond = 1.12, #bar
             P_start_1 = 2,
             P_start_2 = self.feed_stage + 1,
@@ -75,7 +78,7 @@ class Model:
         )
 
     def update_manipulated(self, P_cond: float = None, P_start_1: int = None, P_start_2: int = None, P_end_1: int = None, P_end_2: int = None, P_drop_1: float = None, P_drop_2: float = None, \
-            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, \
+            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, tray_eff: float = None, \
                 n_years: int = None):
         # Update manipulated variables
         self.RR = RR if RR is not None else self.RR
@@ -83,6 +86,7 @@ class Model:
         self.feed_stage = feed_stage if feed_stage is not None else self.feed_stage
         self.tray_spacing = tray_spacing if tray_spacing is not None else self.tray_spacing
         self.num_pass = num_pass if num_pass is not None else self.num_pass
+        self.tray_eff = tray_eff if tray_eff is not None else self.tray_eff
         self.P_cond = P_cond if P_cond is not None else self.P_cond
         self.P_start_1 = P_start_1 if P_start_1 is not None else self.P_start_1
         self.P_start_2 = P_start_2 if P_start_2 is not None else self.P_start_2
@@ -151,6 +155,8 @@ class Model:
         # Hydraulic Ending Stage = N - 1
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_STAGE2\1", self.N - 1)
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_NPASS\1", self.num_pass)
+
+        self.setValue(r"\Data\Blocks\B1\Input\STAGE_EFF\2", self.tray_eff)
 
         # Reinit before run
         self.obj.Reinit()
