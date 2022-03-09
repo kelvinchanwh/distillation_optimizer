@@ -289,3 +289,6 @@ class Model:
         self.simulate()
         self.calc_tac()
         return self.TAC
+
+    def close(self):
+        self.obj.Close()
