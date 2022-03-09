@@ -271,8 +271,8 @@ class Model:
 
         U_cond = 0.852
         U_reb = 0.568
-        A_cond = self.Q_cond/(U_cond * del_t_mean_cond)
-        A_reb = self.Q_reb/(U_reb * del_t_mean_reb)
+        A_cond = abs(self.Q_cond)/(U_cond * del_t_mean_cond)
+        A_reb = abs(self.Q_reb)/(U_reb * del_t_mean_reb)
 
         self.height = 1.2 * self.tray_spacing * self.N
 

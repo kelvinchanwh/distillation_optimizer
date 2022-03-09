@@ -2,7 +2,7 @@ import os
 import model as m
 
 model = m.Model ( 
-    filepath = os.path.join(os.getcwd(), 'Simulation 1.bkp'), 
+    filepath = os.path.join(os.getcwd(), 'Simulation 2.bkp'), 
     components = ["BENZENE", "TOLUENE"], 
     N = 36,
     RR = 0.924,
@@ -11,4 +11,5 @@ model = m.Model (
     P_cond = 1.12,
 )
 
-model.run()
+print (model.run())
+model.obj.Close()
