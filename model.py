@@ -14,12 +14,12 @@ class Model:
 
         Manipulated Variables
         :param P_cond: condenser pressure [bar]
-        :param P_start_1: start stage of first section
-        :param P_start_2: start stage of second section
-        :param P_end_1: end stage of first section
-        :param P_end_2: end stage of second section
-        :param P_drop_1: pressure drop per stage of first section, [bar]
-        :param P_drop_2: pressure drop per stage of second section, [bar]
+        :param P_start_1: start stage of rectifying section
+        :param P_start_2: start stage of stripping section
+        :param P_end_1: end stage of rectifying section
+        :param P_end_2: end stage of stripping section
+        :param P_drop_1: pressure drop per stage of rectifying section, [bar]
+        :param P_drop_2: pressure drop per stage of stripping section, [bar]
         :param RR: reflux ratio (L/D)
         :param N: number of stages
         :param feed_stage: stage number of the input feed [on-stage]
@@ -52,7 +52,7 @@ class Model:
         self.tray_eff = tray_eff if tray_eff is not None else self.init_var()["tray_eff"]
         self.n_years = n_years if n_years is not None else self.init_var()["n_years"]
 
-        # Create COM object
+        # Create COM object (Import Aspen File as an Object)
         self.obj = win32.Dispatch("Apwn.Document")
         self.obj.InitFromArchive2(self.filepath)
         self.obj.Visible = 1
@@ -263,12 +263,12 @@ class Model:
         # T_in_cold_reb must be at least 10 deg C below T_in_cold_reb
         if t_in_cold_reb > 160.0 - 10.0:
             # Use hp steam temp
-            steam = "lp"
+            steam = "hp"
             t_in_hot_reb = 254.0
             t_out_hot_reb = 253.0
         else:
             # Use lp steam temp
-            steam = "hp"
+            steam = "lp"
             t_in_hot_reb = 160.0
             t_out_hot_reb = 159.0
 
