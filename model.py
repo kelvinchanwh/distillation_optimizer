@@ -217,7 +217,7 @@ class Model:
         blockOutput = ["TOP_TEMP", "SCTEMP", "COND_DUTY", "SCDUTY", "MOLE_D", "MOLE_L1", \
             "MOLE_RR", "MOLE_DW", "RW", "MOLE_DFR", "BOTTOM_TEMP", "REB_DUTY", "MOLE_B", \
                 "MOLE_VN", "MOLE_BR", "MOLE_BFR", "B_PRES", "B_TEMP", "X", "Y", \
-                    "PROD_LFLOW", "HYD_MWL", "HYD_MWL", "HYD_RHOL", "HYD_RHOV", "HYD_VVF", \
+                    "PROD_LFLOW", "HYD_MWL", "HYD_MWV", "HYD_RHOL", "HYD_RHOV", "HYD_VVF", \
                         "HYD_LVF"]
 
         streamOutput = ["TEMP_OUT", "PRES_OUT", "VFRAC_OUT", "LFRAC", "SFRAC", "MASSVFRA", \
