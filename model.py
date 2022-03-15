@@ -215,28 +215,48 @@ class Model:
         # List of output variables
         blockOutput = ["TOP_TEMP", "SCTEMP", "COND_DUTY", "SCDUTY", "MOLE_D", "MOLE_L1", \
             "MOLE_RR", "MOLE_DW", "RW", "MOLE_DFR", "BOTTOM_TEMP", "REB_DUTY", "MOLE_B", \
-                "MOLE_VN", "MOLE_BR", "MOLE_BFR", "B_PRES", "B_TEMP", "X", "Y"]
+                "MOLE_VN", "MOLE_BR", "MOLE_BFR", "B_PRES", "B_TEMP", "X", "Y", \
+                    "PROD_LFLOW", "HYD_MWL", "HYD_MWL", "HYD_RHOL", "HYD_RHOV", "HYD_VVF", \
+                        "HYD_LVF"]
 
         streamOutput = ["TEMP_OUT", "PRES_OUT", "VFRAC_OUT", "LFRAC", "SFRAC", "MASSVFRA", \
             "MASSSFRA", "HMX", "HMX_MASS", "SMX", "SMX_MASS", "RHOMX", "RHOMX_MASS", "HMX_FLOW", \
                 "MWMX", "MOLEFLMX", "MOLEFLOW", "MOLEFRAC", "MASSFLMX", "MASSFLOW", "MASSFRAC", \
                     "VOLFLMX"]
+
+        trayOutput = ["DIAM4", "DCLENG2", "DCAREA"]
         
         self.blockOutput = dict()
         self.streamOutput = dict()
+        self.trayOutput = dict()
         
         # Get output values
         for var in blockOutput:
             self.blockOutput[var] = self.getLeafs("\\Data\\Blocks\\B1\\Output\\" + var)
+
+        for var in trayOutput:
+            self.trayOutput[var] = self.getLeafs("\\Data\\Blocks\\B1\\Subobjects\\Tray Sizing\\1\\Output\\" + var + "\\1")
         
         for i in range(1, 4):
             for var in streamOutput:
                 self.streamOutput[var] = self.getLeafs("\\Data\\Streams\\" + str(i) + "\\Output\\" + var)
 
+        self.feed_flow_rate = self.getValue("\\Data\\Streams\\1\\Input\\TOT_FLOW")
+
         self.T_stage = list(self.blockOutput["B_TEMP"].values())
-        self.diameter = self.getValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Output\DIAM4\1")
+        self.molecular_weight_liquid = list(self.blockOutput["HYD_MWL"].values())
+        self.molecular_weight_vapour = list(self.blockOutput["HYD_MWV"].values())
+        self.density_liquid = list(map(conversions.gmCc_to_kgM3, self.blockOutput["HYD_RHOL"].values()))
+        self.density_vapour = list(map(conversions.gmCc_to_kgM3, self.blockOutput["HYD_RHOV"].values()))
+        self.volume_flow_vapour = list(self.blockOutput["HYD_VVF"].values())
+        self.volume_flow_liquid = list(self.blockOutput["HYD_LVF"].values())
+        self.weir_length = trayOutput["DCLENG2"]
+        self.diameter = trayOutput["DIAM4"]
         self.Q_cond = self.blockOutput["COND_DUTY"]
         self.Q_reb = self.blockOutput["REB_DUTY"]
+        self.D = self.blockOutput["PROD_LFLOW"]
+        self.A_c = self.blockOutput["DCAREA"]
+        self.A_d = self.blockOutput["MOLE_RR"]
 
     def calc_energy_cost(self, steam_type):
         energy_cost = 0.0
