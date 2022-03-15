@@ -261,6 +261,8 @@ class Model:
         self.weir_length = self.trayOutput["DCLENG2"]
         self.diameter = self.trayOutput["DIAM4"]
 
+        self.recovery = dict()
+        self.purity = dict()
         for component in self.components:
             self.recovery[component] = max(self.blockOutput["MASS_CONC"][component].values())
             self.purity[component] = max(self.blockOutput["X_MS"][str(i)][component].values() for i in range(1, self.N+1))
