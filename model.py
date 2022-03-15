@@ -4,7 +4,7 @@ import conversions
 import time
 
 class Model:
-    def __init__(self, filepath: str, components: list, \
+    def __init__(self, filepath: str, \
         P_cond: float = None, P_start_1: int = None, P_start_2: int = None, P_end_1: int = None, P_end_2: int = None, P_drop_1: float = None, P_drop_2: float = None, \
             RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, tray_eff: float = None, \
             n_years: int = None):
@@ -32,7 +32,6 @@ class Model:
 
         # Initialize variables
         self.filepath = filepath
-        self.components = components
 
         self.RR = RR if RR is not None else self.init_var()["RR"]
         self.N = N if N is not None else self.init_var()["N"]
@@ -58,6 +57,9 @@ class Model:
         self.obj.InitFromArchive2(self.filepath)
         self.obj.Visible = 1
         self.obj.SuppressDialogs = 1
+
+        # Get all components
+        self.components = list(self.getLeafs("\\Data\\Streams\\1\\Input\\FLOW\\MIXED").keys())
         
     def init_var(self):
         # Get initial values
@@ -218,7 +220,7 @@ class Model:
             "MOLE_RR", "MOLE_DW", "RW", "MOLE_DFR", "BOTTOM_TEMP", "REB_DUTY", "MOLE_B", \
                 "MOLE_VN", "MOLE_BR", "MOLE_BFR", "B_PRES", "B_TEMP", "X", "Y", \
                     "PROD_LFLOW", "HYD_MWL", "HYD_MWV", "HYD_RHOL", "HYD_RHOV", "HYD_VVF", \
-                        "HYD_LVF", "DCAREA"]
+                        "HYD_LVF", "DCAREA", "MASS_CONC", "X_MS"]
 
         streamOutput = ["TEMP_OUT", "PRES_OUT", "VFRAC_OUT", "LFRAC", "SFRAC", "MASSVFRA", \
             "MASSSFRA", "HMX", "HMX_MASS", "SMX", "SMX_MASS", "RHOMX", "RHOMX_MASS", "HMX_FLOW", \
@@ -258,6 +260,10 @@ class Model:
         self.A_d = self.blockOutput["DCAREA"]
         self.weir_length = self.trayOutput["DCLENG2"]
         self.diameter = self.trayOutput["DIAM4"]
+
+        for component in self.components:
+            self.recovery[component] = max(self.blockOutput["MASS_CONC"][component].values())
+            self.purity[component] = max(self.blockOutput["X_MS"][str(i)][component].values() for i in range(1, self.N+1))
 
     def calc_energy_cost(self, steam_type):
         energy_cost = 0.0
