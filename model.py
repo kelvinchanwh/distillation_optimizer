@@ -247,8 +247,8 @@ class Model:
         self.T_stage = list(self.blockOutput["B_TEMP"].values())
         self.molecular_weight_liquid = list(self.blockOutput["HYD_MWL"].values())
         self.molecular_weight_vapour = list(self.blockOutput["HYD_MWV"].values())
-        self.density_liquid = list(conversions.gmCc_to_kgM3(i) for i in self.blockOutput["HYD_RHOL"].values())
-        self.density_vapour = list(conversions.gmCc_to_kgM3(i) for i in self.blockOutput["HYD_RHOV"].values())
+        self.density_liquid = self.blockOutput["HYD_RHOL"].values()
+        self.density_vapour = self.blockOutput["HYD_RHOV"].values()
         self.volume_flow_vapour = list(self.blockOutput["HYD_VVF"].values())
         self.volume_flow_liquid = list(self.blockOutput["HYD_LVF"].values())
         self.weir_length = trayOutput["DCLENG2"]
