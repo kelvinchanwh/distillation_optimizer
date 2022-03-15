@@ -1,6 +1,7 @@
 import os
 import win32com.client as win32
 import conversions
+import time
 
 class Model:
     def __init__(self, filepath: str, components: list, \
@@ -312,8 +313,10 @@ class Model:
         self.TAC = ((C_cap_hx + C_cap_col) / self.n_years) + self.energy_cost
 
     def run(self):
+        start_time = time.time()
         self.simulate()
         self.calc_tac()
+        print ("Calculation time: %s seconds" % (time.time() - start_time))
         return self.TAC
 
     def close(self):
