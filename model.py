@@ -212,15 +212,29 @@ class Model:
         {'Name': 'VOLFLMX', 'Description': 'Total Volume Flow'}
         """
 
-        # List output variables
-        self.blockOutput = self.getLeafs("\\Data\\Blocks\\B1\\Output\\")
-        for i in range(1, 4):
-            self.streamOutput = self.getLeafs("\\Data\\Streams\\" + str(i) + "\\Output\\")
-        self.trayOutput = self.getLeafs("\\Data\\Blocks\\B1\\Subobjects\\Tray Sizing\\1\\Output\\")
+        # List of output variables
+        blockOutput = ["TOP_TEMP", "SCTEMP", "COND_DUTY", "SCDUTY", "MOLE_D", "MOLE_L1", \
+            "MOLE_RR", "MOLE_DW", "RW", "MOLE_DFR", "BOTTOM_TEMP", "REB_DUTY", "MOLE_B", \
+                "MOLE_VN", "MOLE_BR", "MOLE_BFR", "B_PRES", "B_TEMP", "X", "Y"]
 
-        # Save commonly used variables as a property
+        streamOutput = ["TEMP_OUT", "PRES_OUT", "VFRAC_OUT", "LFRAC", "SFRAC", "MASSVFRA", \
+            "MASSSFRA", "HMX", "HMX_MASS", "SMX", "SMX_MASS", "RHOMX", "RHOMX_MASS", "HMX_FLOW", \
+                "MWMX", "MOLEFLMX", "MOLEFLOW", "MOLEFRAC", "MASSFLMX", "MASSFLOW", "MASSFRAC", \
+                    "VOLFLMX"]
+        
+        self.blockOutput = dict()
+        self.streamOutput = dict()
+        
+        # Get output values
+        for var in blockOutput:
+            self.blockOutput[var] = self.getLeafs("\\Data\\Blocks\\B1\\Output\\" + var)
+        
+        for i in range(1, 4):
+            for var in streamOutput:
+                self.streamOutput[var] = self.getLeafs("\\Data\\Streams\\" + str(i) + "\\Output\\" + var)
+
         self.T_stage = list(self.blockOutput["B_TEMP"].values())
-        self.diameter = self.trayOutput["DIAM4"]["1"]
+        self.diameter = self.getValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Output\DIAM4\1")
         self.Q_cond = self.blockOutput["COND_DUTY"]
         self.Q_reb = self.blockOutput["REB_DUTY"]
 
