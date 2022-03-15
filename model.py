@@ -242,7 +242,7 @@ class Model:
             for var in streamOutput:
                 self.streamOutput[var] = self.getLeafs("\\Data\\Streams\\" + str(i) + "\\Output\\" + var)
 
-        self.feed_flow_rate = self.getValue("\\Data\\Streams\\1\\Input\\TOT_FLOW")
+        self.feed_flow_rate = self.getValue("\\Data\\Streams\\1\\Input\\TOTFLOW")
 
         self.T_stage = list(self.blockOutput["B_TEMP"].values())
         self.molecular_weight_liquid = list(self.blockOutput["HYD_MWL"].values())
