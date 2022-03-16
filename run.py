@@ -1,5 +1,6 @@
 import os
 import model as m
+import optimize as opt
 
 model = m.Model ( 
     filepath = os.path.join(os.getcwd(), 'Simulation 2.bkp'), 
@@ -10,5 +11,11 @@ model = m.Model (
     P_cond = 1.12,
 )
 
-print (model.run())
+model.run()
+print (model.TAC)
+
+# Optimize
+optimizer = opt.Optimizer(model)
+print (optimizer.run())
+
 # model.obj.Close()
