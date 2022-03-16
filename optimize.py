@@ -51,10 +51,10 @@ class Optimizer():
         return conversions.gmCc_to_kgM3(self.model.density_liquid[0] if section == "top" else self.model.density_liquid[-1])
     
     def func_density_vapour(self, section):
-        return conversions.gmCc_to_kgM3(self.model.density_vapour[0] if section == "top" else self.model.density_vapour[-1])
+        return conversions.gmCc_to_kgM3(self.model.density_vapour[0] if section == "top" else self.model.density_vapour[-2])
 
     def func_volume_flow_vapour(self, section):
-        return conversions.lMin_to_m3Sec(self.func_volume_flow_vapour(section) if section == "top" else self.model.volume_flow_vapour[-1])
+        return conversions.lMin_to_m3Sec(self.model.volume_flow_vapour[0] if section == "top" else self.model.volume_flow_vapour[-1])
         
     def func_h_ow(self, value, section):
         if value == 'max':
@@ -81,7 +81,7 @@ class Optimizer():
         return self.func_volume_flow_vapour(section) / self.func_hole_area()
 
     def func_h_d(self, section):
-        orifice_coeff = graph.orifice((self.func_hole_area()/self.func_A_ap()), self.plate_thickness/self.hole_diameter)
+        orifice_coeff = graph.orifice((self.func_hole_area()/self.func_active_area()), self.plate_thickness/self.hole_diameter)
         return 51 * ((self.func_max_vapour_vel(section) / orifice_coeff) **2) * (self.func_density_vapour(section)/self.func_density_liquid(section))
 
     def func_h_r(self, section):
@@ -98,10 +98,10 @@ class Optimizer():
         return self.model.D[0] * (1 + self.model.RR)
 
     def func_f_lv(self, section):
-        return (self.func_L(section) / self.func_f_lv()) * ((self.func_density_vapour(section) / self.func_density_liquid(section)) ** (1./2))
+        return (self.func_L(section) / self.func_v()) * ((self.func_density_vapour(section) / self.func_density_liquid(section)) ** (1./2))
 
     def func_flooding_vapour_velocity(self, section):
-        return graph.K1(self.func_f_lv()) * (((self.func_density_liquid(section) - self.func_density_vapour(section))/self.func_density_vapour(section)) ** (1./2))
+        return graph.K1(self.func_f_lv(section), self.model.tray_spacing) * (((self.func_density_liquid(section) - self.func_density_vapour(section))/self.func_density_vapour(section)) ** (1./2))
 
     def func_u_n(self, section):
         return self.frac_appr_flooding * self.func_flooding_vapour_velocity(section)
@@ -110,7 +110,7 @@ class Optimizer():
         return max(self.func_volume_flow_vapour(section)/self.func_u_n(section) for section in ['top', 'bottom'])
 
     def func_percent_flooding(self, section):
-        u_v = self.func_volume_flow_vapour(section) / self.func_net_area
+        u_v = self.func_volume_flow_vapour(section) / self.func_net_area()
         return u_v / self.func_flooding_vapour_velocity(section)
 
     def entrainmentCheck(self, section):

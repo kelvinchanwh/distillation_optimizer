@@ -17,10 +17,10 @@ def kelvin_to_celcius(kelvin):
     return kelvin - 273.15
 
 def gmCc_to_kgM3(gm_cc):
-    return gm_cc / 1000.
+    return gm_cc * 1000.
 
 def kgM3_to_gmCc(kg_m3):
-    return kg_m3 * 1000.
+    return kg_m3 / 1000.
 
 def lMin_to_m3Sec(l_min):
     return l_min * 60. / 1000.

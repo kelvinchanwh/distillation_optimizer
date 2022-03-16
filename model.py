@@ -227,7 +227,7 @@ class Model:
                 "MWMX", "MOLEFLMX", "MOLEFLOW", "MOLEFRAC", "MASSFLMX", "MASSFLOW", "MASSFRAC", \
                     "VOLFLMX"]
 
-        trayOutput = ["DIAM4", "DCLENG2", "DCAREA"]
+        trayOutput = ["DIAM4", "DCLENG2", "DCAREA", "TOT_AREA", "SIDE_AREA"]
         
         self.blockOutput = dict()
         self.streamOutput = dict()
@@ -244,20 +244,20 @@ class Model:
             for var in streamOutput:
                 self.streamOutput[var] = self.getLeafs("\\Data\\Streams\\" + str(i) + "\\Output\\" + var)
 
-        self.feed_flow_rate = self.getValue("\\Data\\Streams\\1\\Input\\TOTFLOW")
+        self.feed_flow_rate = self.getValue("\\Data\\Streams\\1\\Input\\TOTFLOW\\MIXED")
 
         self.T_stage = list(self.blockOutput["B_TEMP"].values())
         self.molecular_weight_liquid = list(self.blockOutput["HYD_MWL"].values())
         self.molecular_weight_vapour = list(self.blockOutput["HYD_MWV"].values())
-        self.density_liquid = self.blockOutput["HYD_RHOL"].values()
-        self.density_vapour = self.blockOutput["HYD_RHOV"].values()
+        self.density_liquid = list(self.blockOutput["HYD_RHOL"].values())
+        self.density_vapour = list(self.blockOutput["HYD_RHOV"].values())
         self.volume_flow_vapour = list(self.blockOutput["HYD_VVF"].values())
         self.volume_flow_liquid = list(self.blockOutput["HYD_LVF"].values())
         self.Q_cond = self.blockOutput["COND_DUTY"]
         self.Q_reb = self.blockOutput["REB_DUTY"]
-        self.D = self.blockOutput["PROD_LFLOW"]
-        self.A_c = self.blockOutput["DCAREA"]
-        self.A_d = self.blockOutput["DCAREA"]
+        self.D = list(self.blockOutput["PROD_LFLOW"].values())
+        self.A_c = max(self.trayOutput["TOT_AREA"].values())
+        self.A_d = max(self.trayOutput["SIDE_AREA"].values())
         self.weir_length = self.trayOutput["DCLENG2"]
         self.diameter = self.trayOutput["DIAM4"]
 
