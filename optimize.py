@@ -24,11 +24,11 @@ class Optimizer():
         self.plate_thickness = 5 #mm (Assumption)
         self.frac_appr_flooding = 0.8 #Assumption
 
-    def func_net_area(self):
-        return self.model.A_c - self.model.A_d
+    # def func_net_area(self):
+    #     return self.model.A_c - self.model.A_d
 
     def func_active_area(self):
-        return self.func_net_area() - self.model.A_d
+        return self.model.A_c - 2 * self.model.A_d
     
     def func_hole_area(self):
         return 0.1 * self.func_active_area()
@@ -107,14 +107,14 @@ class Optimizer():
     def func_u_n(self, section):
         return self.frac_appr_flooding * self.func_flooding_vapour_velocity(section)
 
-    # def func_net_area(self):
-    #     top = self.func_volume_flow_vapour("top")/self.func_u_n("top")
-    #     bottom = self.func_volume_flow_vapour("bottom")/self.func_u_n("bottom")
-    #     return top if top > bottom else bottom
-    #     return max(self.func_volume_flow_vapour(section)/self.func_u_n(section) for section in ['top', 'bottom'])
+    def func_net_area_required(self):
+        top = self.func_volume_flow_vapour("top")/self.func_u_n("top")
+        bottom = self.func_volume_flow_vapour("bottom")/self.func_u_n("bottom")
+        return top if top > bottom else bottom
+        # return max(self.func_volume_flow_vapour(section)/self.func_u_n(section) for section in ['top', 'bottom'])
 
     def func_percent_flooding(self, section):
-        u_v = self.func_volume_flow_vapour(section) / self.func_net_area()
+        u_v = self.func_volume_flow_vapour(section) / self.func_net_area_required()
         return u_v / self.func_flooding_vapour_velocity(section)
 
     def entrainmentCheck(self, section):
@@ -155,23 +155,23 @@ class Optimizer():
             ]
 
         constraints = [            # Manipulated Constraints
-            gk.Equations(self.model.P_start_2 - self.model.P_start_1>=0), # P_start_2 - P_start_1
-            gk.Equations(self.model.N - self.model.P_end_2>=0),
+            gk.Equation(self.model.P_start_2 - self.model.P_start_1>=0), # P_start_2 - P_start_1
+            gk.Equation(self.model.N - self.model.P_end_2>=0),
             # Results Constraint
-            gk.Equations(self.model.purity[self.main_component] - self.purityLB>=0),
-            gk.Equations(self.purityUB - self.model.purity[self.main_component]>=0),
-            gk.Equations(self.model.recovery[self.main_component] - self.recoveryLB>=0),
-            gk.Equations(self.recoveryUB - self.model.recovery[self.main_component]>=0),
-            gk.Equations(self.weepingCheck('top')>=0),
-            gk.Equations(self.downcomerLiquidBackupCheck('top')>=0),
-            gk.Equations(self.downcomerResidenceTimeCheck('top')>=0),
-            gk.Equations(self.entrainmentCheck('top')>=0),
-            gk.Equations(self.entrainmentFracCheck('top')>=0),
-            gk.Equations(self.weepingCheck('bottom')>=0),
-            gk.Equations(self.downcomerLiquidBackupCheck('bottom')>=0),
-            gk.Equations(self.downcomerResidenceTimeCheck('bottom')>=0),
-            gk.Equations(self.entrainmentCheck('bottom')>=0),
-            gk.Equations(self.entrainmentFracCheck('bottom')>=0)
+            gk.Equation(self.model.purity[self.main_component] - self.purityLB>=0),
+            gk.Equation(self.purityUB - self.model.purity[self.main_component]>=0),
+            gk.Equation(self.model.recovery[self.main_component] - self.recoveryLB>=0),
+            gk.Equation(self.recoveryUB - self.model.recovery[self.main_component]>=0),
+            gk.Equation(self.weepingCheck('top')>=0),
+            gk.Equation(self.downcomerLiquidBackupCheck('top')>=0),
+            gk.Equation(self.downcomerResidenceTimeCheck('top')>=0),
+            gk.Equation(self.entrainmentCheck('top')>=0),
+            gk.Equation(self.entrainmentFracCheck('top')>=0),
+            gk.Equation(self.weepingCheck('bottom')>=0),
+            gk.Equation(self.downcomerLiquidBackupCheck('bottom')>=0),
+            gk.Equation(self.downcomerResidenceTimeCheck('bottom')>=0),
+            gk.Equation(self.entrainmentCheck('bottom')>=0),
+            gk.Equation(self.entrainmentFracCheck('bottom')>=0)
         ]
 
         # result = opt.minimize(
@@ -183,7 +183,7 @@ class Optimizer():
         #     options={'disp': True}, 
         #     tol = self.opt_tolerance
         # )
-        gk.Objective(self.objective(var))
+        gk.Obj(self.objective(var))
         gk.options.SOLVER = 1
         gk.solve(disp=True)
         # return result
