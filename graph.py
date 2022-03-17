@@ -1,8 +1,11 @@
 import numpy as np
+from gekko import GEKKO
+
+gk = GEKKO()
 
 def K2(h_w_h_ow):
     # Based on: Graph pg 17.37 pg 878
-    return 1.6494 * np.log(h_w_h_ow) + 23.434
+    return 1.6494 * gk.log(h_w_h_ow) + 23.434
 
 def K1(f_lv, plate_spacing):
     # Based on: Graph pg 17.34

@@ -265,7 +265,7 @@ class Model:
         self.purity = dict()
         for component in self.components:
             self.recovery[component] = max(self.blockOutput["MASS_CONC"][component].values())
-            self.purity[component] = max(self.blockOutput["X_MS"][str(i)][component] for i in range(1, self.N+1))
+            self.purity[component] = max(self.blockOutput["X_MS"][str(i)][component] for i in range(1, int(self.N+1)))
 
     def calc_energy_cost(self, steam_type):
         energy_cost = 0.0
