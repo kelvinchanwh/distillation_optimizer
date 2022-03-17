@@ -174,15 +174,15 @@ class Optimizer():
             gk.Equations(self.entrainmentFracCheck('bottom')>=0)
         ]
 
-        result = opt.minimize(
-            self.objective,
-            x0, 
-            constraints = constraints,
-            bounds = bounds,
-            method='SLSQP', 
-            options={'disp': True}, 
-            tol = self.opt_tolerance
-        )
+        # result = opt.minimize(
+        #     self.objective,
+        #     x0, 
+        #     constraints = constraints,
+        #     bounds = bounds,
+        #     method='SLSQP', 
+        #     options={'disp': True}, 
+        #     tol = self.opt_tolerance
+        # )
         gk.Objective(self.objective(var))
         gk.options.SOLVER = 1
         gk.solve(disp=True)
