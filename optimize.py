@@ -24,11 +24,11 @@ class Optimizer():
         self.plate_thickness = 5 #mm (Assumption)
         self.frac_appr_flooding = 0.8 #Assumption
 
-    # def func_net_area(self):
-    #     return self.model.A_c - self.model.A_d
+    def func_net_area(self):
+        return self.model.A_c - self.model.A_d
 
     def func_active_area(self):
-        return self.model.A_c - 2 * self.model.A_d
+        return self.func_net_area() - self.model.A_d
     
     def func_hole_area(self):
         return 0.1 * self.func_active_area()
@@ -108,10 +108,7 @@ class Optimizer():
         return self.frac_appr_flooding * self.func_flooding_vapour_velocity(section)
 
     def func_net_area_required(self):
-        top = self.func_volume_flow_vapour("top")/self.func_u_n("top")
-        bottom = self.func_volume_flow_vapour("bottom")/self.func_u_n("bottom")
-        return top if top > bottom else bottom
-        # return max(self.func_volume_flow_vapour(section)/self.func_u_n(section) for section in ['top', 'bottom'])
+        return max(self.func_volume_flow_vapour(section)/self.func_u_n(section) for section in ['top', 'bottom'])
 
     def func_percent_flooding(self, section):
         u_v = self.func_volume_flow_vapour(section) / self.func_net_area_required()
@@ -136,73 +133,87 @@ class Optimizer():
         return self.residence_time - 3 # Should be larger than 3s
 
     def optimize(self):
-        gk = GEKKO(remote = False)
-        var = [
-            gk.Var(self.model.P_cond, lb=0, integer = False, name = 'P_cond'),
-            gk.Var(self.model.P_start_1, lb=2, integer = True, name = 'P_start_1'),
-            gk.Var(self.model.P_start_2, lb=2, integer = True, name = 'P_start_2'),
-            gk.Var(self.model.P_end_1, lb=2, integer = True, name = 'P_end_1'),
-            gk.Var(self.model.P_end_2, lb=2, integer = True, name = 'P_end_2'),
-            gk.Var(self.model.P_drop_1, lb=0.01, integer = False, name = 'P_drop_1'),
-            gk.Var(self.model.P_drop_2, lb=0.01, integer = False, name = 'P_drop_2'),
-            gk.Var(self.model.RR, lb=0, ub=1, integer = False, name = 'RR'),
-            gk.Var(self.model.N, lb=3, integer = True, name = 'N'),
-            gk.Var(self.model.feed_stage, lb=2, integer = True, name = 'feed_stage'),
-            gk.Var(self.model.tray_spacing, lb=0, integer = False, name = 'tray_spacing'),
-            gk.Var(self.model.num_pass, lb=1, ub=4, integer = True, name = 'num_pass'),
-            gk.Var(self.model.tray_eff, lb=0, ub=1, integer = False, name = 'tray_eff'),
-            gk.Var(self.model.n_years, lb=1, integer = True, name = 'n_years'),
+        x0 = [
+            self.model.P_cond, 
+            self.model.P_start_1, 
+            self.model.P_start_2, 
+            self.model.P_end_1, 
+            self.model.P_end_2, 
+            self.model.P_drop_1, 
+            self.model.P_drop_2, 
+            self.model.RR, 
+            self.model.N, 
+            self.model.feed_stage, 
+            self.model.tray_spacing, 
+            self.model.num_pass, 
+            self.model.tray_eff, 
+            self.model.n_years
             ]
 
-        constraints = [            # Manipulated Constraints
-            gk.Equation(self.model.P_start_2 - self.model.P_start_1>=0), # P_start_2 - P_start_1
-            gk.Equation(self.model.N - self.model.P_end_2>=0),
-            # Results Constraint
-            gk.Equation(self.model.purity[self.main_component] - self.purityLB>=0),
-            gk.Equation(self.purityUB - self.model.purity[self.main_component]>=0),
-            gk.Equation(self.model.recovery[self.main_component] - self.recoveryLB>=0),
-            gk.Equation(self.recoveryUB - self.model.recovery[self.main_component]>=0),
-            gk.Equation(self.weepingCheck('top')>=0),
-            gk.Equation(self.downcomerLiquidBackupCheck('top')>=0),
-            gk.Equation(self.downcomerResidenceTimeCheck('top')>=0),
-            gk.Equation(self.entrainmentCheck('top')>=0),
-            gk.Equation(self.entrainmentFracCheck('top')>=0),
-            gk.Equation(self.weepingCheck('bottom')>=0),
-            gk.Equation(self.downcomerLiquidBackupCheck('bottom')>=0),
-            gk.Equation(self.downcomerResidenceTimeCheck('bottom')>=0),
-            gk.Equation(self.entrainmentCheck('bottom')>=0),
-            gk.Equation(self.entrainmentFracCheck('bottom')>=0)
-        ]
+        bounds = (
+            (0, None), # P_cond
+            (1, None), # P_start_1
+            (1, None), # P_start_2
+            (1, None), # P_end_1
+            (1, None), # P_end_2
+            (0, None), # P_drop_1
+            (0, None), # P_drop_2
+            (0, 1), # RR
+            (3, None), # N
+            (2, None), # feed_stage
+            (0, None), # tray_spacing
+            (1, 4), # num_pass
+            (0, 1), # tray_eff
+            (1, None) # n_years
+        )
 
-        # result = opt.minimize(
-        #     self.objective,
-        #     x0, 
-        #     constraints = constraints,
-        #     bounds = bounds,
-        #     method='SLSQP', 
-        #     options={'disp': True}, 
-        #     tol = self.opt_tolerance
-        # )
-        gk.Obj(self.objective(var))
-        gk.options.SOLVER = 1
-        gk.solve(disp=True)
-        # return result
+        constraints = (
+            # Manipulated Constraints
+            {'type': 'ineq', 'fun': lambda x: self.model.P_start_2 - self.model.P_start_1}, # P_start_2 - P_start_1
+            {'type': 'ineq', 'fun': lambda x: self.model.N - self.model.P_end_2},
+            # Results Constraint
+            {'type': 'ineq', 'fun': lambda x: self.model.purity[self.main_component] - self.purityLB},
+            {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.main_component]},
+            {'type': 'ineq', 'fun': lambda x: self.model.recovery[self.main_component] - self.recoveryLB},
+            {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.main_component]},
+            {'type': 'ineq', 'fun': self.weepingCheck('top')},
+            {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheck('top')},
+            {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheck('top')},
+            {'type': 'ineq', 'fun': self.entrainmentCheck('top')},
+            {'type': 'ineq', 'fun': self.entrainmentFracCheck('top')},
+            {'type': 'ineq', 'fun': self.weepingCheck('bottom')},
+            {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheck('bottom')},
+            {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheck('bottom')},
+            {'type': 'ineq', 'fun': self.entrainmentCheck('bottom')},
+            {'type': 'ineq', 'fun': self.entrainmentFracCheck('bottom')},
+        )
+
+        result = opt.minimize(
+            self.objective,
+            x0, 
+            constraints = constraints,
+            bounds = bounds,
+            method='SLSQP', 
+            options={'disp': True}, 
+            tol = self.opt_tolerance
+        )
+        return result
 
     def objective(self, x):
-        self.model.P_cond = float(x[0])
-        self.model.P_start_1 = int(x[1])
-        self.model.P_start_2 = int(x[2])
-        self.model.P_end_1 = int(x[3])
-        self.model.P_end_2 = int(x[4])
-        self.model.P_drop_1 = float(x[5])
-        self.model.P_drop_2 = float(x[6])
-        self.model.RR = float(x[7])
-        self.model.N = int(x[8])
-        self.model.feed_stage = int(x[9])
-        self.model.tray_spacing = float(x[10])
-        self.model.num_pass = int(x[11])
-        self.model.tray_eff = float(x[12])
-        self.model.n_years = int(x[13])
+        self.model.P_cond = x[0]
+        self.model.P_start_1 = x[1]
+        self.model.P_start_2 = x[2]
+        self.model.P_end_1 = x[3]
+        self.model.P_end_2 = x[4]
+        self.model.P_drop_1 = x[5]
+        self.model.P_drop_2 = x[6]
+        self.model.RR = x[7]
+        self.model.N = x[8]
+        self.model.feed_stage = x[9]
+        self.model.tray_spacing = x[10]
+        self.model.num_pass = x[11]
+        self.model.tray_eff = x[12]
+        self.model.n_years = x[13]
         self.model.run()
         return self.model.TAC
 
