@@ -132,6 +132,36 @@ class Optimizer():
         self.residence_time = (self.model.A_d * self.func_h_b(section) * (10 ** -3) * self.func_density_liquid(section)) / (self.func_max_liquid_flow_rate(section))
         return self.residence_time - 3 # Should be larger than 3s
 
+    def weepingCheckTop(self, x):
+        return self.weepingCheck('top')
+    
+    def weepingCheckBottom(self, x):
+        return self.weepingCheck('bottom')
+    
+    def entrainmentCheckTop(self, x):
+        return self.entrainmentCheck('top')
+    
+    def entrainmentCheckBottom(self, x):
+        return self.entrainmentCheck('bottom')
+
+    def entrainmentFracCheckTop(self, x):
+        return self.entrainmentFracCheck('top')
+
+    def entrainmentFracCheckBottom(self, x):
+        return self.entrainmentFracCheck('bottom')
+
+    def downcomerLiquidBackupCheckTop(self, x):
+        return self.downcomerLiquidBackupCheck('top')
+
+    def downcomerLiquidBackupCheckBottom(self, x):
+        return self.downcomerLiquidBackupCheck('bottom')
+
+    def downcomerResidenceTimeCheckTop(self, x):
+        return self.downcomerResidenceTimeCheck('top')
+
+    def downcomerResidenceTimeCheckBottom(self, x):
+        return self.downcomerResidenceTimeCheck('bottom')
+
     def optimize(self):
         x0 = [
             self.model.P_cond, 
@@ -168,24 +198,26 @@ class Optimizer():
         )
 
         constraints = (
+            # Force Integers
+            {'type': 'eq', 'fun': lambda x: max([x[i] - int(x[i]) for i in [1, 2, 3, 4, 8, 9, 11, 13]])},
             # Manipulated Constraints
             {'type': 'ineq', 'fun': lambda x: self.model.P_start_2 - self.model.P_start_1}, # P_start_2 - P_start_1
-            {'type': 'ineq', 'fun': lambda x: self.model.N - self.model.P_end_2},
+            {'type': 'eq', 'fun': lambda x: self.model.N - self.model.P_end_2},
             # Results Constraint
             {'type': 'ineq', 'fun': lambda x: self.model.purity[self.main_component] - self.purityLB},
             {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.main_component]},
             {'type': 'ineq', 'fun': lambda x: self.model.recovery[self.main_component] - self.recoveryLB},
             {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.main_component]},
-            {'type': 'ineq', 'fun': self.weepingCheck('top')},
-            {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheck('top')},
-            {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheck('top')},
-            {'type': 'ineq', 'fun': self.entrainmentCheck('top')},
-            {'type': 'ineq', 'fun': self.entrainmentFracCheck('top')},
-            {'type': 'ineq', 'fun': self.weepingCheck('bottom')},
-            {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheck('bottom')},
-            {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheck('bottom')},
-            {'type': 'ineq', 'fun': self.entrainmentCheck('bottom')},
-            {'type': 'ineq', 'fun': self.entrainmentFracCheck('bottom')},
+            {'type': 'ineq', 'fun': self.weepingCheckTop},
+            {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckTop},
+            {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckTop},
+            {'type': 'ineq', 'fun': self.entrainmentCheckTop},
+            {'type': 'ineq', 'fun': self.entrainmentFracCheckTop},
+            {'type': 'ineq', 'fun': self.weepingCheckBottom},
+            {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckBottom},
+            {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckBottom},
+            {'type': 'ineq', 'fun': self.entrainmentCheckBottom},
+            {'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
         )
 
         result = opt.minimize(
