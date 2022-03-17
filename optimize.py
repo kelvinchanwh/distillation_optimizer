@@ -188,12 +188,12 @@ class Optimizer():
             (1, None), # P_end_2
             (0, None), # P_drop_1
             (0, None), # P_drop_2
-            (0, 1), # RR
+            (0.1, 1), # RR
             (3, None), # N
             (2, None), # feed_stage
             (0, None), # tray_spacing
             (1, 4), # num_pass
-            (0, 1), # tray_eff
+            (0.3, 0.7), # tray_eff
             (1, None) # n_years
         )
 
