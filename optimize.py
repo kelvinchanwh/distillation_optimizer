@@ -200,20 +200,20 @@ class Optimizer():
         return result
 
     def objective(self, x):
-        self.model.P_cond = x[0]
-        self.model.P_start_1 = x[1]
-        self.model.P_start_2 = x[2]
-        self.model.P_end_1 = x[3]
-        self.model.P_end_2 = x[4]
-        self.model.P_drop_1 = x[5]
-        self.model.P_drop_2 = x[6]
-        self.model.RR = x[7]
-        self.model.N = x[8]
-        self.model.feed_stage = x[9]
-        self.model.tray_spacing = x[10]
-        self.model.num_pass = x[11]
-        self.model.tray_eff = x[12]
-        self.model.n_years = x[13]
+        self.model.P_cond = float(x[0])
+        self.model.P_start_1 = int(x[1])
+        self.model.P_start_2 = int(x[2])
+        self.model.P_end_1 = int(x[3])
+        self.model.P_end_2 = int(x[4])
+        self.model.P_drop_1 = float(x[5])
+        self.model.P_drop_2 = float(x[6])
+        self.model.RR = float(x[7])
+        self.model.N = int(x[8])
+        self.model.feed_stage = int(x[9])
+        self.model.tray_spacing = float(x[10])
+        self.model.num_pass = int(x[11])
+        self.model.tray_eff = float(x[12])
+        self.model.n_years = int(x[13])
         self.model.run()
         return self.model.TAC
 
