@@ -181,7 +181,7 @@ class Optimizer():
             ]
 
         bounds = (
-            (0, None), # P_cond
+            (0.1, None), # P_cond
             (1, None), # P_start_1
             (1, None), # P_start_2
             (1, None), # P_end_1
@@ -191,7 +191,7 @@ class Optimizer():
             (0.1, 1), # RR
             (3, None), # N
             (2, None), # feed_stage
-            (0, None), # tray_spacing
+            (0.1, None), # tray_spacing
             (1, 4), # num_pass
             (0.3, 0.7), # tray_eff
             (1, None) # n_years
@@ -247,7 +247,7 @@ class Optimizer():
         self.model.tray_eff = float(x[12])
         self.model.n_years = int(x[13])
         self.model.run()
-        return self.model.TAC
+        return self.model.TAC/1000000
 
     def run(self):
         result = self.optimize()
