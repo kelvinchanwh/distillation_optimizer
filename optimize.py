@@ -4,7 +4,6 @@ import model
 import scipy.optimize as opt
 import conversions
 import graph
-from gekko import GEKKO
 
 class Optimizer():
     def __init__(self, model: model.Model, opt_tolerance: float = 0.01, \
