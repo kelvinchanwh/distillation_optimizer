@@ -179,12 +179,12 @@ class Optimizer():
 
         bounds = (
             (0.01, None), # P_cond
-            (1, None), # P_start_1
-            (1, None), # P_start_2
-            (1, None), # P_end_1
-            (1, None), # P_end_2
-            (0, None), # P_drop_1
-            (0, None), # P_drop_2
+            (2, None), # P_start_1
+            (3, None), # P_start_2
+            (2, None), # P_end_1
+            (3, None), # P_end_2
+            (0.1, None), # P_drop_1
+            (0.1, None), # P_drop_2
             (0.1, None), # RR
             (5, None), # N
             (2, None), # feed_stage
