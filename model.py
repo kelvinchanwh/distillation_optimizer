@@ -247,7 +247,7 @@ class Model:
             self.streamOutput[str(i)] = stream
 
         self.feed_flow_rate = self.getValue("\\Data\\Streams\\1\\Input\\TOTFLOW\\MIXED")
-        self.stream_input_pres = self.getValue("\\Data\\Streams\\1\\Input\\PRES")
+        self.stream_input_pres = self.getValue("\\Data\\Streams\\1\\Input\\PRES\\MIXED")
 
         self.T_stage = list(self.blockOutput["B_TEMP"].values())
         self.P_stage = list(self.blockOutput["B_PRES"].values())
