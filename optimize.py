@@ -180,7 +180,7 @@ class Optimizer():
             ]
 
         bounds = (
-            (0.1, None), # P_cond
+            (0.01, None), # P_cond
             (1, None), # P_start_1
             (1, None), # P_start_2
             (1, None), # P_end_1
@@ -188,7 +188,7 @@ class Optimizer():
             (0, None), # P_drop_1
             (0, None), # P_drop_2
             (0.1, 1), # RR
-            (3, None), # N
+            (5, None), # N
             (2, None), # feed_stage
             (0.1, None), # tray_spacing
             (1, 4), # num_pass
@@ -200,8 +200,8 @@ class Optimizer():
             # Force Integers
             {'type': 'eq', 'fun': lambda x: max([x[i] - int(x[i]) for i in [1, 2, 3, 4, 8, 9, 11, 13]])},
             # Manipulated Constraints
-            {'type': 'ineq', 'fun': lambda x: self.model.P_start_2 - self.model.P_start_1}, # P_start_2 - P_start_1
-            {'type': 'eq', 'fun': lambda x: self.model.N - self.model.P_end_2},
+            {'type': 'eq', 'fun': lambda x: self.model.P_start_2 - self.model.P_end_1 - 1}, 
+            {'type': 'eq', 'fun': lambda x: self.model.N - self.model.P_end_2 - 1},
             # Results Constraint
             {'type': 'ineq', 'fun': lambda x: self.model.purity[self.main_component] - self.purityLB},
             {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.main_component]},
