@@ -247,8 +247,10 @@ class Model:
             self.streamOutput[str(i)] = stream
 
         self.feed_flow_rate = self.getValue("\\Data\\Streams\\1\\Input\\TOTFLOW\\MIXED")
+        self.stream_input_pres = self.getValue("\\Data\\Streams\\1\\Input\\PRES")
 
         self.T_stage = list(self.blockOutput["B_TEMP"].values())
+        self.P_stage = list(self.blockOutput["B_PRES"].values())
         self.molecular_weight_liquid = list(self.blockOutput["HYD_MWL"].values())
         self.molecular_weight_vapour = list(self.blockOutput["HYD_MWV"].values())
         self.density_liquid = list(self.blockOutput["HYD_RHOL"].values()) # gm_cc

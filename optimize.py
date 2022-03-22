@@ -203,6 +203,7 @@ class Optimizer():
             {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.main_component]},
             {'type': 'ineq', 'fun': lambda x: self.model.recovery[self.main_component] - self.recoveryLB},
             {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.main_component]},
+            {'type': 'ineq', 'fun': lambda x: self.model.stream_input_pres - self.model.P_stage[self.model.feed_stage-1]},
             {'type': 'ineq', 'fun': self.weepingCheckTop},
             {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckTop},
             {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckTop},
