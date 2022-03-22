@@ -187,7 +187,7 @@ class Optimizer():
             (1, None), # P_end_2
             (0, None), # P_drop_1
             (0, None), # P_drop_2
-            (0.1, 1), # RR
+            (0.1, None), # RR
             (5, None), # N
             (2, None), # feed_stage
             (0.1, None), # tray_spacing

@@ -225,7 +225,7 @@ class Model:
         streamOutput = ["TEMP_OUT", "PRES_OUT", "VFRAC_OUT", "LFRAC", "SFRAC", "MASSVFRA", \
             "MASSSFRA", "HMX", "HMX_MASS", "SMX", "SMX_MASS", "RHOMX", "RHOMX_MASS", "HMX_FLOW", \
                 "MWMX", "MOLEFLMX", "MOLEFLOW", "MOLEFRAC", "MASSFLMX", "MASSFLOW", "MASSFRAC", \
-                    "VOLFLMX"]
+                    "VOLFLMX", "STR_MAIN"]
 
         trayOutput = ["DIAM4", "DCLENG2", "DCAREA", "TOT_AREA", "SIDE_AREA"]
         
@@ -264,8 +264,10 @@ class Model:
         self.recovery = dict()
         self.purity = dict()
         for component in self.components:
-            self.recovery[component] = max(self.blockOutput["MASS_CONC"][component].values())
-            self.purity[component] = max(self.blockOutput["X_MS"][str(i)][component] for i in range(1, self.N+1))
+            self.recovery[component] = self.streamOutput["2"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component] \
+                /self.streamOutput["3"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component]
+            self.purity[component] = self.streamOutput["2"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component] \
+                / self.streamOutput["2"]["STR_MAIN"]["MOLEFLMX"]["MIXED"]
 
     def calc_energy_cost(self, steam_type):
         energy_cost = 0.0
