@@ -117,8 +117,8 @@ class Optimizer():
         return self.frac_appr_flooding - self.func_percent_flooding(section) # percent of flooding should be less than frac_appr_flooding
 
     def entrainmentFracCheck(self, section):
-        self.frac_entrainment = graph.frac(self.func_f_lv(section), self.func_percent_flooding(section))
-        return self.frac_entrainment - 0.1 # frac_entrainment should be less than 0.1
+        frac_entrainment = graph.frac(self.func_f_lv(section), self.func_percent_flooding(section))
+        return 0.1 - frac_entrainment # frac_entrainment should be less than 0.1
 
     def weepingCheck(self, section):
         # actual_min_vapour_vel > min_vapour_vel
