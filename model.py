@@ -244,7 +244,7 @@ class Model:
             for var in streamOutput:
                 stream = dict()
                 stream[var] = self.getLeafs("\\Data\\Streams\\" + str(i) + "\\Output\\" + var)
-            self.streamOutput[i] = stream
+            self.streamOutput[str(i)] = stream
 
         self.feed_flow_rate = self.getValue("\\Data\\Streams\\1\\Input\\TOTFLOW\\MIXED")
 
