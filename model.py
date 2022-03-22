@@ -227,7 +227,7 @@ class Model:
                 "MWMX", "MOLEFLMX", "MOLEFLOW", "MOLEFRAC", "MASSFLMX", "MASSFLOW", "MASSFRAC", \
                     "VOLFLMX", "STR_MAIN"]
 
-        trayOutput = ["DIAM4", "DCLENG2", "DCAREA", "TOT_AREA", "SIDE_AREA"]
+        trayOutput = ["DIAM4", "DCLENG1", "DCAREA", "TOT_AREA", "SIDE_AREA"]
         
         self.blockOutput = dict()
         self.streamOutput = dict()
@@ -260,7 +260,7 @@ class Model:
         self.D = list(self.blockOutput["PROD_LFLOW"].values()) #kmol_hr
         self.A_c = max(self.trayOutput["TOT_AREA"].values()) #sqm
         self.A_d = max(self.trayOutput["SIDE_AREA"].values()) # sqm
-        self.weir_length = self.trayOutput["DCLENG2"]
+        self.weir_length = self.trayOutput["DCLENG1"]
         self.diameter = self.trayOutput["DIAM4"]
 
         self.recovery = dict()
