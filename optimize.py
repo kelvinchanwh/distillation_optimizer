@@ -36,7 +36,7 @@ class Optimizer():
         if section == "top":
             return self.model.RR * self.model.D[0]
         elif section == "bottom":
-            return self.model.RR * self.model.D[-1] + self.model.feed_flow_rate
+            return self.model.RR * self.model.D[0] + self.model.feed_flow_rate
         else:
             raise AssertionError("Section must be either top or bottom")
     
@@ -54,7 +54,7 @@ class Optimizer():
         return conversions.gmCc_to_kgM3(self.model.density_vapour[0] if section == "top" else self.model.density_vapour[-2])
 
     def func_volume_flow_vapour(self, section):
-        return conversions.lMin_to_m3Sec(self.model.volume_flow_vapour[0] if section == "top" else self.model.volume_flow_vapour[-1])
+        return conversions.lMin_to_m3Sec(self.model.volume_flow_vapour[0] if section == "top" else self.model.volume_flow_vapour[-2])
         
     def func_h_ow(self, value, section):
         if value == 'max':

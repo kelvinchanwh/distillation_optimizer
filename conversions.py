@@ -23,10 +23,10 @@ def kgM3_to_gmCc(kg_m3):
     return kg_m3 / 1000.
 
 def lMin_to_m3Sec(l_min):
-    return l_min * 60. / 1000.
+    return l_min / 60. / 1000.
 
 def m3Sec_to_lMin(m3_sec):
-    return m3_sec * 1000. / 60.
+    return m3_sec * 1000. * 60.
 
 def mm_to_m(mm):
     return mm / 1000.
