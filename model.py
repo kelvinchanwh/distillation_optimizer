@@ -68,7 +68,7 @@ class Model:
             N = 36,
             feed_stage = 23, 
             tray_spacing = 0.6096,
-            num_pass = 4,
+            num_pass = 1,
             tray_eff = 0.5,
             P_cond = 1.12, #bar
             P_start_1 = 2,
@@ -77,7 +77,7 @@ class Model:
             P_end_2 = self.N - 1,
             P_drop_1 = 0,
             P_drop_2 = 0,
-            n_years = 4
+            n_years = 3
         )
 
     def update_manipulated(self, P_cond: float = None, P_start_1: int = None, P_start_2: int = None, P_end_1: int = None, P_end_2: int = None, P_drop_1: float = None, P_drop_2: float = None, \
@@ -249,15 +249,15 @@ class Model:
         self.T_stage = list(self.blockOutput["B_TEMP"].values())
         self.molecular_weight_liquid = list(self.blockOutput["HYD_MWL"].values())
         self.molecular_weight_vapour = list(self.blockOutput["HYD_MWV"].values())
-        self.density_liquid = list(self.blockOutput["HYD_RHOL"].values())
-        self.density_vapour = list(self.blockOutput["HYD_RHOV"].values())
-        self.volume_flow_vapour = list(self.blockOutput["HYD_VVF"].values())
-        self.volume_flow_liquid = list(self.blockOutput["HYD_LVF"].values())
-        self.Q_cond = self.blockOutput["COND_DUTY"]
-        self.Q_reb = self.blockOutput["REB_DUTY"]
-        self.D = list(self.blockOutput["PROD_LFLOW"].values())
-        self.A_c = max(self.trayOutput["TOT_AREA"].values())
-        self.A_d = max(self.trayOutput["SIDE_AREA"].values())
+        self.density_liquid = list(self.blockOutput["HYD_RHOL"].values()) # gm_cc
+        self.density_vapour = list(self.blockOutput["HYD_RHOV"].values()) # gm_cc
+        self.volume_flow_vapour = list(self.blockOutput["HYD_VVF"].values()) #l_min
+        self.volume_flow_liquid = list(self.blockOutput["HYD_LVF"].values()) #l_min
+        self.Q_cond = self.blockOutput["COND_DUTY"] # cal_sec
+        self.Q_reb = self.blockOutput["REB_DUTY"] #  cal_sec
+        self.D = list(self.blockOutput["PROD_LFLOW"].values()) #kmol_hr
+        self.A_c = max(self.trayOutput["TOT_AREA"].values()) #sqm
+        self.A_d = max(self.trayOutput["SIDE_AREA"].values()) # sqm
         self.weir_length = self.trayOutput["DCLENG2"]
         self.diameter = self.trayOutput["DIAM4"]
 

@@ -174,9 +174,7 @@ class Optimizer():
             self.model.N, 
             self.model.feed_stage, 
             self.model.tray_spacing, 
-            self.model.num_pass, 
             self.model.tray_eff, 
-            self.model.n_years
             ]
 
         bounds = (
@@ -191,14 +189,12 @@ class Optimizer():
             (5, None), # N
             (2, None), # feed_stage
             (0.1, None), # tray_spacing
-            (1, 4), # num_pass
             (0.3, 0.7), # tray_eff
-            (1, None) # n_years
         )
 
         constraints = (
             # Force Integers
-            {'type': 'eq', 'fun': lambda x: max([x[i] - int(x[i]) for i in [1, 2, 3, 4, 8, 9, 11, 13]])},
+            {'type': 'eq', 'fun': lambda x: max([x[i] - int(x[i]) for i in [1, 2, 3, 4, 8, 9]])},
             # Manipulated Constraints
             {'type': 'eq', 'fun': lambda x: self.model.P_start_2 - self.model.P_end_1 - 1}, 
             {'type': 'eq', 'fun': lambda x: self.model.N - self.model.P_end_2 - 1},
@@ -242,9 +238,7 @@ class Optimizer():
         self.model.N = int(x[8])
         self.model.feed_stage = int(x[9])
         self.model.tray_spacing = float(x[10])
-        self.model.num_pass = int(x[11])
-        self.model.tray_eff = float(x[12])
-        self.model.n_years = int(x[13])
+        self.model.tray_eff = float(x[11])
         self.model.run()
         return self.model.TAC/1000000
 
