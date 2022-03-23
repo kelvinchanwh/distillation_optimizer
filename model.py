@@ -330,7 +330,7 @@ class Model:
         start_time = time.time()
         self.simulate()
         self.calc_tac()
-        print ("Calculation time: %s seconds" % (time.time() - start_time))
+        return (time.time() - start_time)
 
     def close(self):
         self.obj.Close()

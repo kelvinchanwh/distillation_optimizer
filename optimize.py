@@ -11,6 +11,8 @@ class Optimizer():
             recoveryLB: float = 0.8, recoveryUB: float = 1.0):
         self.opt_tolerance = opt_tolerance
         self.model = model
+        self.time = 0
+        self.iter = 0
 
         self.main_component = main_component if main_component != None else self.model.components[0]
         self.purityLB = purityLB
@@ -161,6 +163,10 @@ class Optimizer():
     def downcomerResidenceTimeCheckBottom(self, x):
         return self.downcomerResidenceTimeCheck('bottom')
 
+    def callback(self, xi):
+        print ('{0:4d}   {1:3.6f}   {2:3.6f}   {3:3.6f}   {4:3.6f}   {5:3.6f}   {6:3.6f}   {7:3.6f}   {8:3.6f}   {9:3.6f}   {10:3.6f}   {11:3.6f}   {12:3.6f}   {13:3.6f}'.format(self.iter, xi[0], xi[1], xi[2], xi[3], xi[4], xi[5], xi[6], xi[7], xi[8], xi[9], xi[10], xi[11], self.model.TAC, self.time))
+        self.iter += 1
+
     def optimize(self):
         x0 = [
             self.model.P_cond, 
@@ -216,6 +222,7 @@ class Optimizer():
             {'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
         )
 
+        print ('{0:4s}   {1:9s}   {2:9s}   {3:9s}   {4:9s}   {5:9s}   {6:9s}   {7:9s}   {8:9s}   {9:9s}   {10:9s}   {11:9s}   {12:9s}   {13:9s}'.format('Iter', ' P_cond', ' P_start_1', ' P_start_2', 'P_end_1', 'P_end_2', 'P_drop_1', 'P_drop_2', 'RR', 'N', 'feed_stage', 'tray_spacing', 'tray_eff', 'TAC', 'Runtime'))
         result = opt.minimize(
             self.objective,
             x0, 
@@ -228,20 +235,27 @@ class Optimizer():
         return result
 
     def objective(self, x):
-        self.model.P_cond = float(x[0])
-        self.model.P_start_1 = int(x[1])
-        self.model.P_start_2 = int(x[2])
-        self.model.P_end_1 = int(x[3])
-        self.model.P_end_2 = int(x[4])
-        self.model.P_drop_1 = float(x[5])
-        self.model.P_drop_2 = float(x[6])
-        self.model.RR = float(x[7])
-        self.model.N = int(x[8])
-        self.model.feed_stage = int(x[9])
-        self.model.tray_spacing = float(x[10])
-        self.model.tray_eff = float(x[11])
-        self.model.run()
-        return self.model.TAC/1000000
+        try:
+            print ("Trying X = " + str([i for i in x]))
+            self.model.P_cond = float(x[0])
+            self.model.P_start_1 = int(x[1])
+            self.model.P_start_2 = int(x[2])
+            self.model.P_end_1 = int(x[3])
+            self.model.P_end_2 = int(x[4])
+            self.model.P_drop_1 = float(x[5])
+            self.model.P_drop_2 = float(x[6])
+            self.model.RR = float(x[7])
+            self.model.N = int(x[8])
+            self.model.feed_stage = int(x[9])
+            self.model.tray_spacing = float(x[10])
+            self.model.tray_eff = float(x[11])
+            runtime = self.model.run()
+            self.time += runtime
+            return self.model.TAC/1000000
+        except AssertionError as e:
+            # If simulation cannot be run, return a large number
+            print (e)
+            return np.inf
 
     def run(self):
         result = self.optimize()
