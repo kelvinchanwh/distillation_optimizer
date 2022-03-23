@@ -8,7 +8,7 @@ model = m.Model (
     RR = 0.924,
     tray_spacing = 0.63636,
     feed_stage = 23,
-    P_cond = 1.12,
+    P_cond = 1.013,
 )
 
 model.run()
