@@ -236,7 +236,6 @@ class Optimizer():
 
     def objective(self, x):
         try:
-            print ("Trying X = " + str([i for i in x]))
             self.model.P_cond = float(x[0])
             self.model.P_start_1 = int(x[1])
             self.model.P_start_2 = int(x[2])
