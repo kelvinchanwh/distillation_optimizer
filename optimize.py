@@ -163,10 +163,6 @@ class Optimizer():
     def downcomerResidenceTimeCheckBottom(self, x):
         return self.downcomerResidenceTimeCheck('bottom')
 
-    def callback(self, xi):
-        print ('{0:4d}   {1:3.6f}   {2:3.6f}   {3:3.6f}   {4:3.6f}   {5:3.6f}   {6:3.6f}   {7:3.6f}   {8:3.6f}   {9:3.6f}   {10:3.6f}   {11:3.6f}   {12:3.6f}   {13:3.6f}'.format(self.iter, xi[0], xi[1], xi[2], xi[3], xi[4], xi[5], xi[6], xi[7], xi[8], xi[9], xi[10], xi[11], self.model.TAC, self.time))
-        self.iter += 1
-
     def optimize(self):
         x0 = [
             self.model.P_cond, 
@@ -222,7 +218,7 @@ class Optimizer():
             {'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
         )
 
-        print ('{0:4s}   {1:9s}   {2:9s}   {3:9s}   {4:9s}   {5:9s}   {6:9s}   {7:9s}   {8:9s}   {9:9s}   {10:9s}   {11:9s}   {12:9s}   {13:9s}'.format('Iter', ' P_cond', ' P_start_1', ' P_start_2', 'P_end_1', 'P_end_2', 'P_drop_1', 'P_drop_2', 'RR', 'N', 'feed_stage', 'tray_spacing', 'tray_eff', 'TAC', 'Runtime'))
+        print ('{0:4s}   {1:9s}   {2:9s}   {3:9s}   {4:9s}   {5:9s}   {6:9s}   {7:9s}   {8:9s}   {9:9s}   {10:9s}   {11:9s}   {12:9s}   {13:9s}   {14:9s}'.format('Iter', ' P_cond', ' P_start_1', ' P_start_2', 'P_end_1', 'P_end_2', 'P_drop_1', 'P_drop_2', 'RR', 'N', 'feed_stage', 'tray_spacing', 'tray_eff', 'TAC', 'Runtime'))
         result = opt.minimize(
             self.objective,
             x0, 
@@ -250,10 +246,14 @@ class Optimizer():
             self.model.tray_eff = float(x[11])
             runtime = self.model.run()
             self.time += runtime
+            print ('{0:4d}   {1:3.6f}   {2:3.6f}   {3:3.6f}   {4:3.6f}   {5:3.6f}   {6:3.6f}   {7:3.6f}   {8:3.6f}   {9:3.6f}   {10:3.6f}   {11:3.6f}   {12:3.6f}   {13:3.6f}   {14:3.6f}'.format(self.iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], self.model.TAC, self.time))
+            self.iter += 1
             return self.model.TAC/1000000
         except AssertionError as e:
             # If simulation cannot be run, return a large number
-            print (e)
+            self.time += runtime
+            print ('{0:4d}   {1:3.6f}   {2:3.6f}   {3:3.6f}   {4:3.6f}   {5:3.6f}   {6:3.6f}   {7:3.6f}   {8:3.6f}   {9:3.6f}   {10:3.6f}   {11:3.6f}   {12:3.6f}   {13:9s}   {14:3.6f}'.format(self.iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], e, self.time))
+            self.iter += 1
             return np.inf
 
     def run(self):
