@@ -166,7 +166,7 @@ class Optimizer():
 
     def callback(self, x):
         self.func_iter = 0
-        print ('{0:4d}   {1:3.6f}   {2:3.6f}   {3:3.6f}   {4:3.6f}   {5:3.6f}   {6:3.6f}   {7:3.6f}   {8:3.6f}   {9:3.6f}   {10:3.6f}   {11:3.6f}   {12:3.6f}   {13:3.6f}   {14:3.6f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], self.model.TAC, self.time))
+        print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}   {10:3.3f}   {11:3.3f}   {12:3.3f}   {13:3.3f}   {14:3.3f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], self.model.TAC, self.time))
         self.opt_iter += 1
 
     def optimize(self):
@@ -230,6 +230,7 @@ class Optimizer():
             x0, 
             constraints = constraints,
             bounds = bounds,
+            callback = self.callback,
             method='SLSQP', 
             options={'disp': True}, 
             tol = self.opt_tolerance
@@ -257,7 +258,7 @@ class Optimizer():
         except AssertionError as e:
             # If simulation cannot be run, return a large number
             self.time += runtime
-            print ('{0:4d}   {1:3.6f}   {2:3.6f}   {3:3.6f}   {4:3.6f}   {5:3.6f}   {6:3.6f}   {7:3.6f}   {8:3.6f}   {9:3.6f}   {10:3.6f}   {11:3.6f}   {12:3.6f}   {13:9s}   {14:3.6f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], e, self.time))
+            print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}   {10:3.3f}   {11:3.3f}   {12:3.3f}   {13:9s}   {14:3.3f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], e, self.time))
             self.func_iter += 1
             return np.inf
 
