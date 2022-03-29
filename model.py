@@ -38,8 +38,9 @@ class Model:
         self.P_drop_1 = P_drop_1 if P_drop_1 is not None else self.init_var()["P_drop_1"]
         self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.init_var()["P_drop_2"]
 
-        # Ensure stage pressure does not overlap
-        assert self.stage_pressure_check(), "Stage pressure overlaps"
+        # Minimum pressure drop is 0.01 bar
+        self.P_drop_1 = 0.01 if self.P_drop_1 == 0 else self.P_drop_1
+        self.P_drop_2 = 0.01 if self.P_drop_2 == 0 else self.P_drop_2
 
         self.tray_eff = tray_eff if tray_eff is not None else self.init_var()["tray_eff"]
         self.n_years = n_years if n_years is not None else self.init_var()["n_years"]
@@ -83,15 +84,9 @@ class Model:
         self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.P_drop_2
         self.n_years = n_years if n_years is not None else self.n_years
 
-        # Ensure stage pressure does not overlap
-        assert self.stage_pressure_check(), "Stage pressure overlaps"
-
-    def stage_pressure_check(self):
         # Minimum pressure drop is 0.01 bar
         self.P_drop_1 = 0.01 if self.P_drop_1 == 0 else self.P_drop_1
         self.P_drop_2 = 0.01 if self.P_drop_2 == 0 else self.P_drop_2
-        # Check if stage pressure overlaps
-        return (True if (self.P_start_1 >= 1 and self.P_end_1 < self.P_start_2 and self.P_end_2 <= self.N) else False)
     
     def setValue(self, path, value):
         self.obj.Tree.FindNode(path).Value = value
