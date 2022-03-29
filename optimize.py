@@ -186,17 +186,17 @@ class Optimizer():
             ]
 
         bounds = (
-            (1.013, None), # P_cond
+            (1.013, 10), # P_cond
             (2, None), # P_start_1
             (3, None), # P_start_2
             (2, None), # P_end_1
             (3, None), # P_end_2
-            (0.1, 1.0), # P_drop_1
-            (0.1, 1.0), # P_drop_2
+            (0.01, 1.0), # P_drop_1
+            (0.01, 1.0), # P_drop_2
             (0.1, 5.0), # RR
             (5, None), # N
             (2, None), # feed_stage
-            (0.1, None), # tray_spacing
+            (0.1, 1), # tray_spacing
             (0.3, 0.7), # tray_eff
         )
 
@@ -255,7 +255,7 @@ class Optimizer():
             self.time += runtime
             self.func_iter += 1
             return self.model.TAC/1000000
-        except AssertionError as e:
+        except Exception as e:
             # If simulation cannot be run, return a large number
             self.time += runtime
             print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}   {10:3.3f}   {11:3.3f}   {12:3.3f}   {13:9s}   {14:3.3f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], e, self.time))
