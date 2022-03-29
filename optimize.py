@@ -232,9 +232,8 @@ class Optimizer():
             bounds = bounds,
             callback = self.callback,
             method='SLSQP', 
-            options={'disp': True}, 
-            tol = self.opt_tolerance,
-            options={'maxiter':2000}
+            options={'disp': True, 'maxiter':2000}, 
+            tol = self.opt_tolerance
         )
         return result
 
