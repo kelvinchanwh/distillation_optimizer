@@ -166,16 +166,12 @@ class Optimizer():
 
     def callback(self, x):
         self.func_iter = 0
-        print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}   {10:3.3f}   {11:3.3f}   {12:3.3f}   {13:3.3f}   {14:3.3f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], self.model.TAC, self.time))
+        print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}   {10:3.3f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], self.model.TAC, self.time))
         self.opt_iter += 1
 
     def optimize(self):
         x0 = [
             self.model.P_cond, 
-            self.model.P_start_1, 
-            self.model.P_start_2, 
-            self.model.P_end_1, 
-            self.model.P_end_2, 
             self.model.P_drop_1, 
             self.model.P_drop_2, 
             self.model.RR, 
@@ -201,11 +197,6 @@ class Optimizer():
         )
 
         constraints = (
-            # # Force Integers
-            # {'type': 'eq', 'fun': lambda x: max([x[i] - int(x[i]) for i in [1, 2, 3, 4, 8, 9]])},
-            # # Manipulated Constraints
-            # {'type': 'eq', 'fun': lambda x: self.model.P_start_2 - self.model.P_end_1 - 1}, 
-            # {'type': 'eq', 'fun': lambda x: self.model.N - self.model.P_end_2 - 1},
             # Results Constraint
             {'type': 'ineq', 'fun': lambda x: self.model.purity[self.main_component] - self.purityLB},
             {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.main_component]},
@@ -224,7 +215,7 @@ class Optimizer():
             {'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
         )
 
-        print ('{0:4s}   {1:9s}   {2:9s}   {3:9s}   {4:9s}   {5:9s}   {6:9s}   {7:9s}   {8:9s}   {9:9s}   {10:9s}   {11:9s}   {12:9s}   {13:9s}   {14:9s}'.format('Iter', ' P_cond', ' P_start_1', ' P_start_2', 'P_end_1', 'P_end_2', 'P_drop_1', 'P_drop_2', 'RR', 'N', 'feed_stage', 'tray_spacing', 'tray_eff', 'TAC', 'Runtime'))
+        print ('{0:4s}   {1:9s}   {2:9s}   {3:9s}   {4:9s}   {5:9s}   {6:9s}   {7:9s}   {8:9s}   {9:9s}   {10:9s}'.format('Iter', ' P_cond', 'P_drop_1', 'P_drop_2', 'RR', 'N', 'feed_stage', 'tray_spacing', 'tray_eff', 'TAC', 'Runtime'))
         result = opt.minimize(
             self.objective,
             x0, 
@@ -240,17 +231,13 @@ class Optimizer():
     def objective(self, x):
         try:
             self.model.P_cond = float(x[0])
-            self.model.P_start_1 = int(x[1])
-            self.model.P_start_2 = int(x[2])
-            self.model.P_end_1 = int(x[3])
-            self.model.P_end_2 = int(x[4])
-            self.model.P_drop_1 = float(x[5])
-            self.model.P_drop_2 = float(x[6])
-            self.model.RR = float(x[7])
-            self.model.N = int(x[8])
-            self.model.feed_stage = int(x[9])
-            self.model.tray_spacing = float(x[10])
-            self.model.tray_eff = float(x[11])
+            self.model.P_drop_1 = float(x[1])
+            self.model.P_drop_2 = float(x[2])
+            self.model.RR = float(x[3])
+            self.model.N = int(x[4])
+            self.model.feed_stage = int(x[5])
+            self.model.tray_spacing = float(x[6])
+            self.model.tray_eff = float(x[7])
             runtime = self.model.run()
             self.time += runtime
             self.func_iter += 1
@@ -258,7 +245,7 @@ class Optimizer():
         except Exception as e:
             # If simulation cannot be run, return a large number
             self.time += runtime
-            print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}   {10:3.3f}   {11:3.3f}   {12:3.3f}   {13:9s}   {14:3.3f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], e, self.time))
+            print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}   {10:3.3f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], e, self.time))
             self.func_iter += 1
             return np.inf
 

@@ -5,7 +5,7 @@ import time
 
 class Model:
     def __init__(self, filepath: str, \
-        P_cond: float = None, P_start_1: int = None, P_start_2: int = None, P_end_1: int = None, P_end_2: int = None, P_drop_1: float = None, P_drop_2: float = None, \
+        P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, \
             RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, tray_eff: float = None, \
             n_years: int = None):
         """
@@ -15,10 +15,6 @@ class Model:
 
         Manipulated Variables
         :param P_cond: condenser pressure [bar]
-        :param P_start_1: start stage of rectifying section
-        :param P_start_2: start stage of stripping section
-        :param P_end_1: end stage of rectifying section
-        :param P_end_2: end stage of stripping section
         :param P_drop_1: pressure drop per stage of rectifying section, [bar]
         :param P_drop_2: pressure drop per stage of stripping section, [bar]
         :param RR: reflux ratio (L/D)
@@ -39,10 +35,6 @@ class Model:
         self.tray_spacing = tray_spacing if tray_spacing is not None else self.init_var()["tray_spacing"]
         self.num_pass = num_pass if num_pass is not None else self.init_var()["num_pass"]
         self.P_cond = P_cond if P_cond is not None else self.init_var()["P_cond"]
-        self.P_start_1 = P_start_1 if P_start_1 is not None else self.init_var()["P_start_1"]
-        self.P_start_2 = P_start_2 if P_start_2 is not None else self.init_var()["P_start_2"]
-        self.P_end_1 = P_end_1 if P_end_1 is not None else self.init_var()["P_end_1"]
-        self.P_end_2 = P_end_2 if P_end_2 is not None else self.init_var()["P_end_2"]
         self.P_drop_1 = P_drop_1 if P_drop_1 is not None else self.init_var()["P_drop_1"]
         self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.init_var()["P_drop_2"]
 
@@ -71,16 +63,12 @@ class Model:
             num_pass = 1,
             tray_eff = 0.5,
             P_cond = 1.12, #bar
-            P_start_1 = 2,
-            P_start_2 = self.feed_stage + 1,
-            P_end_1 = self.feed_stage - 1,
-            P_end_2 = self.N - 1,
             P_drop_1 = 0,
             P_drop_2 = 0,
             n_years = 3
         )
 
-    def update_manipulated(self, P_cond: float = None, P_start_1: int = None, P_start_2: int = None, P_end_1: int = None, P_end_2: int = None, P_drop_1: float = None, P_drop_2: float = None, \
+    def update_manipulated(self, P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, \
             RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, tray_eff: float = None, \
                 n_years: int = None):
         # Update manipulated variables
@@ -91,10 +79,6 @@ class Model:
         self.num_pass = num_pass if num_pass is not None else self.num_pass
         self.tray_eff = tray_eff if tray_eff is not None else self.tray_eff
         self.P_cond = P_cond if P_cond is not None else self.P_cond
-        self.P_start_1 = P_start_1 if P_start_1 is not None else self.P_start_1
-        self.P_start_2 = P_start_2 if P_start_2 is not None else self.P_start_2
-        self.P_end_1 = P_end_1 if P_end_1 is not None else self.P_end_1
-        self.P_end_2 = P_end_2 if P_end_2 is not None else self.P_end_2
         self.P_drop_1 = P_drop_1 if P_drop_1 is not None else self.P_drop_1
         self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.P_drop_2
         self.n_years = n_years if n_years is not None else self.n_years
@@ -135,6 +119,12 @@ class Model:
         :param Q_reb: reboiler duty [kW]
         """
         # Set manipulated variables in Aspen
+
+        self.P_start_1 = 2
+        self.P_start_2 = self.feed_stage + 1
+        self.P_end_1 = self.feed_stage
+        self.P_end_2 = self.N - 1
+
         # Pressure
         self.setValue(r"\Data\Blocks\B1\Input\PRES1", self.P_cond)
         self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\1", self.P_start_1)
