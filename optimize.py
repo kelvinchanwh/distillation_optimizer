@@ -191,9 +191,9 @@ class Optimizer():
             (3, None), # P_start_2
             (2, None), # P_end_1
             (3, None), # P_end_2
-            (0.1, None), # P_drop_1
-            (0.1, None), # P_drop_2
-            (0.1, None), # RR
+            (0.1, 1.0), # P_drop_1
+            (0.1, 1.0), # P_drop_2
+            (0.1, 5,0), # RR
             (5, None), # N
             (2, None), # feed_stage
             (0.1, None), # tray_spacing
@@ -233,7 +233,8 @@ class Optimizer():
             callback = self.callback,
             method='SLSQP', 
             options={'disp': True}, 
-            tol = self.opt_tolerance
+            tol = self.opt_tolerance,
+            options={'maxiter':2000}
         )
         return result
 
