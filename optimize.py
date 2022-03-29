@@ -183,10 +183,6 @@ class Optimizer():
 
         bounds = (
             (1.013, 10), # P_cond
-            (2, None), # P_start_1
-            (3, None), # P_start_2
-            (2, None), # P_end_1
-            (3, None), # P_end_2
             (0.01, 1.0), # P_drop_1
             (0.01, 1.0), # P_drop_2
             (0.1, 5.0), # RR
