@@ -166,7 +166,7 @@ class Optimizer():
 
     def callback(self, x):
         self.func_iter = 0
-        print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}   {10:3.3f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], self.model.TAC, self.time))
+        print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], self.model.TAC, self.time))
         self.opt_iter += 1
 
     def optimize(self):
@@ -177,8 +177,7 @@ class Optimizer():
             self.model.RR, 
             self.model.N, 
             self.model.feed_stage, 
-            self.model.tray_spacing, 
-            self.model.tray_eff, 
+            self.model.tray_spacing
             ]
 
         bounds = (
@@ -189,7 +188,6 @@ class Optimizer():
             (5, 300), # N
             (2, self.model.N-1), # feed_stage
             (0.15, 1), # tray_spacing
-            (0.3, 0.7), # tray_eff
         )
 
         constraints = (
@@ -211,7 +209,7 @@ class Optimizer():
             {'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
         )
 
-        print ('{0:4s}   {1:9s}   {2:9s}   {3:9s}   {4:9s}   {5:9s}   {6:9s}   {7:9s}   {8:9s}   {9:9s}   {10:9s}'.format('Iter', ' P_cond', 'P_drop_1', 'P_drop_2', 'RR', 'N', 'feed_stage', 'tray_spacing', 'tray_eff', 'TAC', 'Runtime'))
+        print ('{0:4s}   {1:9s}   {2:9s}   {3:9s}   {4:9s}   {5:9s}   {6:9s}   {7:9s}   {8:9s}   {9:9s}'.format('Iter', ' P_cond', 'P_drop_1', 'P_drop_2', 'RR', 'N', 'feed_stage', 'tray_spacing', 'TAC', 'Runtime'))
         result = opt.minimize(
             self.objective,
             x0, 
@@ -233,7 +231,6 @@ class Optimizer():
             self.model.N = int(x[4])
             self.model.feed_stage = int(x[5])
             self.model.tray_spacing = float(x[6])
-            self.model.tray_eff = float(x[7])
             runtime = self.model.run()
             self.time += runtime
             self.func_iter += 1
@@ -241,7 +238,7 @@ class Optimizer():
         except Exception as e:
             # If simulation cannot be run, return a large number
             self.time += runtime
-            print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}   {10:3.3f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], e, self.time))
+            print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], e, self.time))
             self.func_iter += 1
             return np.inf
 
