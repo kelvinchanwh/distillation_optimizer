@@ -186,8 +186,8 @@ class Optimizer():
             (0.01, 1.0), # P_drop_1
             (0.01, 1.0), # P_drop_2
             (0.1, 5.0), # RR
-            (5, None), # N
-            (2, None), # feed_stage
+            (5, 300), # N
+            (2, self.model.N-1), # feed_stage
             (0.15, 1), # tray_spacing
             (0.3, 0.7), # tray_eff
         )
