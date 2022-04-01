@@ -254,7 +254,8 @@ class Model:
         self.purity = dict()
         for component in self.components:
             self.recovery[component] = self.streamOutput["2"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component] \
-                /self.streamOutput["3"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component]
+                / (self.streamOutput["3"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component] \
+                    +self.streamOutput["3"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component])
             self.purity[component] = self.streamOutput["2"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component] \
                 / self.streamOutput["2"]["STR_MAIN"]["MOLEFLMX"]["MIXED"]
 
