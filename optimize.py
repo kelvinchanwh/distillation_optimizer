@@ -4,18 +4,18 @@ import model
 import scipy.optimize as opt
 import conversions
 import graph
+import initialize
 
 class Optimizer():
     def __init__(self, model: model.Model, opt_tolerance: float = 0.01, \
-        main_component: str = None, purityLB: float = 0.8, purityUB: float = 1.0,\
-            recoveryLB: float = 0.8, recoveryUB: float = 1.0):
+        purityLB: float = 0.99, purityUB: float = 1.0,\
+            recoveryLB: float = 0.99, recoveryUB: float = 1.0):
         self.opt_tolerance = opt_tolerance
         self.model = model
         self.time = 0
         self.func_iter = 0
         self.opt_iter = 0
 
-        self.main_component = main_component if main_component != None else self.model.components[0]
         self.purityLB = purityLB
         self.purityUB = purityUB
         self.recoveryLB = recoveryLB
@@ -174,9 +174,9 @@ class Optimizer():
             self.model.P_cond, 
             self.model.P_drop_1, 
             self.model.P_drop_2, 
-            self.model.RR, 
-            self.model.N, 
-            self.model.feed_stage, 
+            initialize.min_RR(self.model), 
+            initialize.actual_N(self.model, self.recoveryLB), 
+            initialize.feed_stage(self.model), 
             self.model.tray_spacing
             ]
 
@@ -192,10 +192,10 @@ class Optimizer():
 
         constraints = (
             # Results Constraint
-            {'type': 'ineq', 'fun': lambda x: self.model.purity[self.main_component] - self.purityLB},
-            {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.main_component]},
-            {'type': 'ineq', 'fun': lambda x: self.model.recovery[self.main_component] - self.recoveryLB},
-            {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.main_component]},
+            {'type': 'ineq', 'fun': lambda x: self.model.purity[self.model.main_component] - self.purityLB},
+            {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.model.main_component]},
+            {'type': 'ineq', 'fun': lambda x: self.model.recovery[self.model.main_component] - self.recoveryLB},
+            {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.model.main_component]},
             {'type': 'ineq', 'fun': lambda x: self.model.stream_input_pres - self.model.P_stage[self.model.feed_stage-1]},
             {'type': 'ineq', 'fun': self.weepingCheckTop},
             {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckTop},

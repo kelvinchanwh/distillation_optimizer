@@ -2,9 +2,10 @@ import os
 import win32com.client as win32
 import conversions
 import time
-
+import collections
+import initialize
 class Model:
-    def __init__(self, filepath: str, \
+    def __init__(self, filepath: str, main_component: str = None, \
         P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, \
             RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, tray_eff: float = None, \
             n_years: int = None):
@@ -53,13 +54,14 @@ class Model:
 
         # Get all components
         self.components = list(self.getLeafs("\\Data\\Streams\\1\\Input\\FLOW\\MIXED").keys())
+        self.main_component = main_component if main_component is not None else self.components[0]
         
     def init_var(self):
         # Get initial values
         return dict(
-            RR = 0.924, 
-            N = 36,
-            feed_stage = 23, 
+            RR = initialize.min_RR(self), 
+            N = initialize.actual_N(self),
+            feed_stage = initialize.feed_stage(self), 
             tray_spacing = 0.6096,
             num_pass = 1,
             tray_eff = 0.5,
@@ -203,7 +205,7 @@ class Model:
         # List of output variables
         blockOutput = ["TOP_TEMP", "SCTEMP", "COND_DUTY", "SCDUTY", "MOLE_D", "MOLE_L1", \
             "MOLE_RR", "MOLE_DW", "RW", "MOLE_DFR", "BOTTOM_TEMP", "REB_DUTY", "MOLE_B", \
-                "MOLE_VN", "MOLE_BR", "MOLE_BFR", "B_PRES", "B_TEMP", "X", "Y", \
+                "MOLE_VN", "MOLE_BR", "MOLE_BFR", "B_PRES", "B_TEMP", "B_K", "X", "Y", \
                     "PROD_LFLOW", "HYD_MWL", "HYD_MWV", "HYD_RHOL", "HYD_RHOV", "HYD_VVF", \
                         "HYD_LVF", "DCAREA", "MASS_CONC", "X_MS"]
 
@@ -250,14 +252,23 @@ class Model:
         self.weir_length = self.trayOutput["DCLENG1"]
         self.diameter = self.trayOutput["DIAM4"]
 
+        self.K = dict()
         self.recovery = dict()
         self.purity = dict()
+        self.mole_frac = dict()
         for component in self.components:
             self.recovery[component] = self.streamOutput["2"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component] \
-                / (self.streamOutput["3"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component] \
+                / (self.streamOutput["2"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component] \
                     +self.streamOutput["3"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component])
             self.purity[component] = self.streamOutput["2"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component] \
                 / self.streamOutput["2"]["STR_MAIN"]["MOLEFLMX"]["MIXED"]
+            self.K[component] = self.blockOutput["B_K"][self.tray_spacing][component]
+            self.mole_frac[component] = self.getValue("\\Data\\Streams\\1\\Input\\FLOW\\MIXED\\" + component)/self.streamOutput["1"]["STR_MAIN"]["MOLEFLMX"]["MIXED"]
+
+        # Order K by compoenent K
+        self.K = collections.OrderedDict(sorted(self.K.items(), key=lambda t: t[1]))
+        self.HK = self.main_component
+        self.LK = self.K.items()[list(self.K).index(self.main_component) + 1]
 
     def calc_energy_cost(self, steam_type):
         energy_cost = 0.0
