@@ -262,13 +262,13 @@ class Model:
                     +self.streamOutput["3"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component])
             self.purity[component] = self.streamOutput["2"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component] \
                 / self.streamOutput["2"]["STR_MAIN"]["MOLEFLMX"]["MIXED"]
-            self.K[component] = self.blockOutput["B_K"][self.tray_spacing][component]
+            self.K[component] = self.blockOutput["B_K"][str(self.feed_stage)][component]
             self.mole_frac[component] = self.getValue("\\Data\\Streams\\1\\Input\\FLOW\\MIXED\\" + component)/self.streamOutput["1"]["STR_MAIN"]["MOLEFLMX"]["MIXED"]
 
         # Order K by compoenent K
         self.K = collections.OrderedDict(sorted(self.K.items(), key=lambda t: t[1]))
-        self.HK = self.main_component
-        self.LK = self.K.items()[list(self.K).index(self.main_component) + 1]
+        self.LK = self.main_component
+        self.HK = list(self.K.items())[list(self.K).index(self.main_component) - 1]
 
     def calc_energy_cost(self, steam_type):
         energy_cost = 0.0

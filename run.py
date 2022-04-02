@@ -9,6 +9,7 @@ model = m.Model (
     tray_spacing = 0.63636,
     feed_stage = 23,
     P_cond = 1.013,
+    main_component = "BENZENE"
 )
 
 model.run()
