@@ -59,9 +59,9 @@ class Model:
     def init_var(self):
         # Get initial values
         return dict(
-            RR = initialize.min_RR(self), 
-            N = initialize.actual_N(self),
-            feed_stage = initialize.feed_stage(self), 
+            RR = 0.924, 
+            N = 36,
+            feed_stage = 23, 
             tray_spacing = 0.6096,
             num_pass = 1,
             tray_eff = 0.5,
