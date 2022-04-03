@@ -264,6 +264,7 @@ class Model:
         self.recovery = dict()
         self.purity = dict()
         self.mole_frac = dict()
+        self.mole_flow = dict()
         for component in self.components:
             self.recovery[component] = self.streamOutput["2"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component] \
                 / (self.streamOutput["2"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component] \
@@ -271,7 +272,8 @@ class Model:
             self.purity[component] = self.streamOutput["2"]["STR_MAIN"]["MOLEFLOW"]["MIXED"][component] \
                 / self.streamOutput["2"]["STR_MAIN"]["MOLEFLMX"]["MIXED"]
             self.K[component] = self.blockOutput["B_K"][str(self.feed_stage)][component]
-            self.mole_frac[component] = self.getValue("\\Data\\Streams\\1\\Input\\FLOW\\MIXED\\" + component)/self.streamOutput["1"]["STR_MAIN"]["MOLEFLMX"]["MIXED"]
+            self.mole_flow[component] = self.getValue("\\Data\\Streams\\1\\Input\\FLOW\\MIXED\\" + component)
+            self.mole_frac[component] = self.mole_flow[component]/self.streamOutput["1"]["STR_MAIN"]["MOLEFLMX"]["MIXED"]
 
         # Order K by compoenent K
         self.K = collections.OrderedDict(sorted(self.K.items(), key=lambda t: t[1]))
