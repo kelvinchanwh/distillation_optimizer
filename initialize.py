@@ -13,11 +13,7 @@ def min_N(model: model, recovery_LB = 0.99):
     """
     Calculate minimum number of stages.
     """
-    dl = recovery_LB * model.mole_frac[model.LK] * model.feed_flow_rate 
-    bl = (1-recovery_LB) * model.mole_frac[model.LK] * model.feed_flow_rate
-    dh = model.D[0] - dl
-    bh = model.D[-1] - bl
-    num = np.log((dl * bh)/(dh * bl))
+    num = np.log((recovery_LB/(1-recovery_LB)) ** 2) # Assume that the recovery is the same for HK and LK
     den = np.log(model.K[model.LK])
     return int(math.ceil(num/den))
 
