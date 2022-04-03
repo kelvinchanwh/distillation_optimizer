@@ -107,6 +107,32 @@ class Model:
             output =  node.Value
         return output
 
+    def set_pressure_stages(self):
+        # Pressure
+        self.setValue(r"\Data\Blocks\B1\Input\PRES1", self.P_cond)
+        self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\1", self.P_start_1)
+        self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
+        self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\1", self.P_drop_1)
+        self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\2", self.P_drop_2)
+        # If current 2nd start stage is smaller then upcoming 1st end stage, then set the upcoming 2nd start stage first
+        curr2start = self.getValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2")
+        if (self.P_end_1 >= curr2start):
+            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2", self.P_start_2)
+            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\1", self.P_end_1)
+        else:
+            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\1", self.P_end_1)
+            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2", self.P_start_2)
+        # Hydraulic Ending Stage = N - 1
+        self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_STAGE2\1", self.N - 1)
+
+    def set_general_variables(self):
+        self.setValue(r"\Data\Blocks\B1\Input\NSTAGE", self.N)
+        self.setValue(r"\Data\Blocks\B1\Input\FEED_STAGE\1", self.feed_stage)
+        self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_TSPACE\1", self.tray_spacing)    
+        self.setValue(r"\Data\Blocks\B1\Input\BASIS_RR", self.RR)
+        self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_NPASS\1", self.num_pass)
+        self.setValue(r"\Data\Blocks\B1\Input\STAGE_EFF\2", self.tray_eff)
+
     def simulate(self):
         """
         Responding Variables
@@ -122,31 +148,13 @@ class Model:
         self.P_end_1 = self.feed_stage
         self.P_end_2 = self.N - 1
 
-        # Pressure
-        self.setValue(r"\Data\Blocks\B1\Input\PRES1", self.P_cond)
-        self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\1", self.P_start_1)
-        self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
-        self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\1", self.P_drop_1)
-        self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\2", self.P_drop_2)
-        # If current 2nd start stage is smaller then upcoming 1st end stage, then set the upcoming 2nd start stage first
-        curr2start = self.getValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2")
-        if (self.P_end_1 >= curr2start):
-            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2", self.P_start_2)
-            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\1", self.P_end_1)
+        currN = self.getValue(r"\Data\Blocks\B1\Input\NSTAGE")
+        if currN < self.N:
+            self.set_pressure_stages()
+            self.set_general_variables()
         else:
-            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\1", self.P_end_1)
-            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2", self.P_start_2)
-
-        
-        self.setValue(r"\Data\Blocks\B1\Input\BASIS_RR", self.RR)
-        self.setValue(r"\Data\Blocks\B1\Input\NSTAGE", self.N)
-        self.setValue(r"\Data\Blocks\B1\Input\FEED_STAGE\1", self.feed_stage)
-        self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_TSPACE\1", self.tray_spacing)
-        # Hydraulic Ending Stage = N - 1
-        self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_STAGE2\1", self.N - 1)
-        self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_NPASS\1", self.num_pass)
-
-        self.setValue(r"\Data\Blocks\B1\Input\STAGE_EFF\2", self.tray_eff)
+            self.set_general_variables()
+            self.set_pressure_stages()
 
         # Reinit before run
         self.obj.Reinit()
@@ -268,7 +276,7 @@ class Model:
         # Order K by compoenent K
         self.K = collections.OrderedDict(sorted(self.K.items(), key=lambda t: t[1]))
         self.LK = self.main_component
-        self.HK = list(self.K.items())[list(self.K).index(self.main_component) - 1]
+        self.HK = list(self.K.items())[list(self.K).index(self.main_component) - 1][0]
 
     def calc_energy_cost(self, steam_type):
         energy_cost = 0.0
