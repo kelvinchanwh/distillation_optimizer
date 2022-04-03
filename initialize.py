@@ -45,7 +45,7 @@ def min_RR(model: model, recovery_LB = 0.99):
     mole_frac[model.LK] = LK_flow/D
     mole_frac[model.HK] = HK_flow/D
 
-    summation = sum([relative_volatility(model, component) * mole_frac[component] / (relative_volatility(model, component) - theta(model)) for component in mole_frac[0]])
+    summation = sum([relative_volatility(model, component) * mole_frac[component] / (relative_volatility(model, component) - theta(model)) for component in mole_frac.keys()])
     return summation - 1
 
 def actual_N (model: model, recovery_LB = 0.99):

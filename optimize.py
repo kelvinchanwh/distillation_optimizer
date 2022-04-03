@@ -176,7 +176,7 @@ class Optimizer():
             self.model.P_drop_2, 
             initialize.min_RR(self.model), 
             initialize.actual_N(self.model, self.recoveryLB), 
-            initialize.feed_stage(self.model), 
+            initialize.feed_stage(self.model, self.recovery_LB), 
             self.model.tray_spacing
             ]
 
@@ -184,8 +184,8 @@ class Optimizer():
             (1.013, 10), # P_cond
             (0.01, 1.0), # P_drop_1
             (0.01, 1.0), # P_drop_2
-            (0.1, 5.0), # RR
-            (5, 300), # N
+            (initialize.min_RR(self.model, self.recovery_LB), 1.1 * initialize.min_RR(self.model, self.recovery_LB)), # RR
+            (initialize.min_N(self.model, self.recoveryLB), 300), # N
             (2, self.model.N-2), # feed_stage
             (0.15, 1), # tray_spacing
         )
@@ -210,6 +210,7 @@ class Optimizer():
         )
 
         print ('{0:4s}   {1:9s}   {2:9s}   {3:9s}   {4:9s}   {5:9s}   {6:9s}   {7:9s}   {8:9s}   {9:9s}'.format('Iter', ' P_cond', 'P_drop_1', 'P_drop_2', 'RR', 'N', 'feed_stage', 'tray_spacing', 'TAC', 'Runtime'))
+        print ('{0:4s}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:4s}   {9:3.3f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], "----", self.time))
         result = opt.minimize(
             self.objective,
             x0, 
