@@ -110,6 +110,7 @@ class Model:
     def set_pressure_stages(self):
         # Pressure
         self.setValue(r"\Data\Blocks\B1\Input\PRES1", self.P_cond)
+        # TODO: Determibne which pressures to set first based on changes        
         self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\1", self.P_start_1)
         self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
         self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\1", self.P_drop_1)
@@ -149,7 +150,7 @@ class Model:
         self.P_end_2 = self.N - 1
 
         currN = self.getValue(r"\Data\Blocks\B1\Input\NSTAGE")
-        if currN < self.N:
+        if currN > self.N:
             self.set_pressure_stages()
             self.set_general_variables()
         else:
