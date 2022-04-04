@@ -7,10 +7,11 @@ import graph
 import initialize
 
 class Optimizer():
-    def __init__(self, model: model.Model, opt_tolerance: float = 0.01, \
+    def __init__(self, model: model.Model, opt_tolerance: float = 0.01, eps: float = 1e-5, \
         purityLB: float = 0.99, purityUB: float = 1.0,\
             recoveryLB: float = 0.99, recoveryUB: float = 1.0):
         self.opt_tolerance = opt_tolerance
+        self.eps = eps
         self.model = model
         self.time = 0
         self.func_iter = 0
@@ -179,13 +180,16 @@ class Optimizer():
             initialize.feed_stage(self.model, self.recoveryLB), 
             self.model.tray_spacing
             ]
+        
+        min_RR = initialize.min_RR(self.model, self.recoveryLB)
+        min_N = initialize.min_N(self.model, self.recoveryLB)
 
         bounds = (
             (1.013, 10), # P_cond
             (0.01, 1.0), # P_drop_1
             (0.01, 1.0), # P_drop_2
-            (initialize.min_RR(self.model, self.recoveryLB), 1.1 * initialize.min_RR(self.model, self.recoveryLB)), # RR
-            (initialize.min_N(self.model, self.recoveryLB), 300), # N
+            (min_RR, 1.1 * min_RR), # RR
+            (min_N, 300), # N
             (2, self.model.N-2), # feed_stage
             (0.15, 1), # tray_spacing
         )
@@ -218,7 +222,7 @@ class Optimizer():
             bounds = bounds,
             callback = self.callback,
             method='SLSQP', 
-            options={'disp': True, 'maxiter':2000}, 
+            options={'disp': True, 'maxiter':2000, 'eps': self.eps}, 
             tol = self.opt_tolerance
         )
         return result
