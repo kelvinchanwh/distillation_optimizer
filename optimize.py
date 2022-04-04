@@ -176,7 +176,7 @@ class Optimizer():
             self.model.P_drop_2, 
             initialize.min_RR(self.model), 
             initialize.actual_N(self.model, self.recoveryLB), 
-            initialize.feed_stage(self.model, self.recovery_LB), 
+            initialize.feed_stage(self.model, self.recoveryLB), 
             self.model.tray_spacing
             ]
 
@@ -184,7 +184,7 @@ class Optimizer():
             (1.013, 10), # P_cond
             (0.01, 1.0), # P_drop_1
             (0.01, 1.0), # P_drop_2
-            (initialize.min_RR(self.model, self.recovery_LB), 1.1 * initialize.min_RR(self.model, self.recovery_LB)), # RR
+            (initialize.min_RR(self.model, self.recoveryLB), 1.1 * initialize.min_RR(self.model, self.recoveryLB)), # RR
             (initialize.min_N(self.model, self.recoveryLB), 300), # N
             (2, self.model.N-2), # feed_stage
             (0.15, 1), # tray_spacing
