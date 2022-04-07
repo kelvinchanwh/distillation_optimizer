@@ -111,11 +111,10 @@ class Model:
         # Pressure
         self.setValue(r"\Data\Blocks\B1\Input\PRES1", self.P_cond)
         # TODO: Determibne which pressures to set first based on changes        
-        self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\1", self.P_start_1)
-        self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
         self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\1", self.P_drop_1)
         self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\2", self.P_drop_2)
         # If current 2nd start stage is smaller then upcoming 1st end stage, then set the upcoming 2nd start stage first
+        self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\1", self.P_start_1)
         curr2start = self.getValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2")
         if (self.P_end_1 >= curr2start):
             self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2", self.P_start_2)
@@ -123,6 +122,7 @@ class Model:
         else:
             self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\1", self.P_end_1)
             self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2", self.P_start_2)
+        self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
         # Hydraulic Ending Stage = N - 1
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_STAGE2\1", self.N - 1)
 
