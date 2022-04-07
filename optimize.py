@@ -11,7 +11,6 @@ class Optimizer():
         purityLB: float = 0.99, purityUB: float = 1.0,\
             recoveryLB: float = 0.99, recoveryUB: float = 1.0):
         self.opt_tolerance = opt_tolerance
-        self.eps = eps
         self.model = model
         self.time = 0
         self.func_iter = 0
@@ -189,8 +188,8 @@ class Optimizer():
             (0.01, 1.0), # P_drop_1
             (0.01, 1.0), # P_drop_2
             (min_RR, 1.1 * min_RR), # RR
-            (min_N, 300), # N
-            (2, self.model.N-2), # feed_stage
+            (min_N/100, 300/100), # N
+            (2/100, (self.model.N-2)/100), # feed_stage
             (0.15, 1), # tray_spacing
         )
 
@@ -198,19 +197,19 @@ class Optimizer():
             # Results Constraint
             {'type': 'ineq', 'fun': lambda x: self.model.purity[self.model.main_component] - self.purityLB},
             {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.model.main_component]},
-            {'type': 'ineq', 'fun': lambda x: self.model.recovery[self.model.main_component] - self.recoveryLB},
-            {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.model.main_component]},
+            #{'type': 'ineq', 'fun': lambda x: self.model.recovery[self.model.main_component] - self.recoveryLB},
+            #{'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.model.main_component]},
             {'type': 'ineq', 'fun': lambda x: self.model.stream_input_pres - self.model.P_stage[self.model.feed_stage-1]},
-            {'type': 'ineq', 'fun': self.weepingCheckTop},
-            {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckTop},
-            {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckTop},
-            {'type': 'ineq', 'fun': self.entrainmentCheckTop},
-            {'type': 'ineq', 'fun': self.entrainmentFracCheckTop},
-            {'type': 'ineq', 'fun': self.weepingCheckBottom},
-            {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckBottom},
-            {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckBottom},
-            {'type': 'ineq', 'fun': self.entrainmentCheckBottom},
-            {'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
+            #{'type': 'ineq', 'fun': self.weepingCheckTop},
+            #{'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckTop},
+            #{'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckTop},
+            #{'type': 'ineq', 'fun': self.entrainmentCheckTop},
+            #{'type': 'ineq', 'fun': self.entrainmentFracCheckTop},
+            #{'type': 'ineq', 'fun': self.weepingCheckBottom},
+            #{'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckBottom},
+            #{'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckBottom},
+            #{'type': 'ineq', 'fun': self.entrainmentCheckBottom},
+            #{'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
         )
 
         print ('{0:4s}   {1:9s}   {2:9s}   {3:9s}   {4:9s}   {5:9s}   {6:9s}   {7:9s}   {8:9s}   {9:9s}'.format('Iter', ' P_cond', 'P_drop_1', 'P_drop_2', 'RR', 'N', 'feed_stage', 'tray_spacing', 'TAC', 'Runtime'))
