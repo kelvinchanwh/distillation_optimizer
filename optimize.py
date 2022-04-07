@@ -61,9 +61,9 @@ class Optimizer():
         
     def func_h_ow(self, value, section):
         if value == 'max':
-            return self.func_max_liquid_flow_rate(section) / (self.func_density_liquid(section) * self.func_density_vapour(section)) ** (2./3)
+            return (self.func_max_liquid_flow_rate(section) / (self.func_density_liquid(section) * self.func_density_vapour(section)) ** (2./3)) * 1000  # Conversion to mm
         else:
-            return self.func_min_liquid_flow_rate(section) / (self.func_density_liquid(section) * self.func_density_vapour(section)) ** (2./3)
+            return (self.func_min_liquid_flow_rate(section) / (self.func_density_liquid(section) * self.func_density_vapour(section)) ** (2./3)) * 1000  # Conversion to mm
 
     def func_h_w_h_ow_min(self, section):
         return self.h_w + self.func_h_ow('min', section)
@@ -78,7 +78,7 @@ class Optimizer():
         return (self.h_w - 10) * self.model.weir_length * (10 ** -3) # Change to m
 
     def func_h_dc(self, section):
-        return 166 * (self.func_max_liquid_flow_rate(section)) / (self.func_density_liquid(section) * ((self.model.A_d if self.model.A_d<self.func_A_ap() else self.func_A_ap())**2))
+        return 166 * ((self.func_max_liquid_flow_rate(section) / (self.func_density_liquid(section) * (self.model.A_d if self.model.A_d<self.func_A_ap() else self.func_A_ap())))**2)
 
     def func_max_vapour_vel(self, section):
         return self.func_volume_flow_vapour(section) / self.func_hole_area()
@@ -125,14 +125,14 @@ class Optimizer():
 
     def weepingCheck(self, section):
         # actual_min_vapour_vel > min_vapour_vel
-        return self.func_actual_min_vapour_vel(section) - self.func_min_vapour_vel(section) 
+        return (self.func_actual_min_vapour_vel(section) - self.func_min_vapour_vel(section))/5.0 # Scale for constraints
 
     def downcomerLiquidBackupCheck(self, section):
-        return  0.5 * (self.model.tray_spacing + self.h_w) - self.func_h_b(section) # Should be larger than 0 (pg 882 towler sinnot)
+        return  0.5 * (self.model.tray_spacing + (self.h_w/1000)) - self.func_h_b(section)/1000 # Should be larger than 0 (pg 882 towler sinnot)
     
     def downcomerResidenceTimeCheck(self, section):
         self.residence_time = (self.model.A_d * self.func_h_b(section) * (10 ** -3) * self.func_density_liquid(section)) / (self.func_max_liquid_flow_rate(section))
-        return self.residence_time - 3 # Should be larger than 3s
+        return (self.residence_time - 3)/10.0 # Should be larger than 3s # Scale for constraints
 
     def weepingCheckTop(self, x):
         return self.weepingCheck('top')
@@ -166,7 +166,7 @@ class Optimizer():
 
     def callback(self, x):
         self.func_iter = 0
-        print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4]*1000, x[5]*100, x[6], self.model.TAC, self.time))
+        print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4]*100, x[5]*100, x[6], self.model.TAC, self.time))
         self.opt_iter += 1
 
     def optimize(self):
@@ -175,7 +175,7 @@ class Optimizer():
             self.model.P_drop_1, 
             self.model.P_drop_2, 
             initialize.min_RR(self.model), 
-            initialize.actual_N(self.model, self.recoveryLB)/1000, 
+            initialize.actual_N(self.model, self.recoveryLB)/100, 
             initialize.feed_stage(self.model, self.recoveryLB)/100, 
             self.model.tray_spacing
             ]
@@ -188,7 +188,7 @@ class Optimizer():
             (0.01, 1.0), # P_drop_1
             (0.01, 1.0), # P_drop_2
             (min_RR, 1.1 * min_RR), # RR
-            (min_N/1000, 300/1000), # N
+            (min_N/100, 300/100), # N
             (3/100, (self.model.N-3)/100), # feed_stage
             (0.15, 1), # tray_spacing
         )
@@ -213,7 +213,7 @@ class Optimizer():
         )
 
         print ('{0:4s}   {1:9s}   {2:9s}   {3:9s}   {4:9s}   {5:9s}   {6:9s}   {7:9s}   {8:9s}   {9:9s}'.format('Iter', ' P_cond', 'P_drop_1', 'P_drop_2', 'RR', 'N', 'feed_stage', 'tray_spacing', 'TAC', 'Runtime'))
-        print ('{0:4s}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:4s}   {9:3.3f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4]*1000, x0[5]*100, x0[6], "----", self.time))
+        print ('{0:4s}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:4s}   {9:3.3f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4]*100, x0[5]*100, x0[6], "----", self.time))
         result = opt.minimize(
             self.objective,
             x0, 
@@ -232,7 +232,7 @@ class Optimizer():
             self.model.P_drop_1 = float(x[1])
             self.model.P_drop_2 = float(x[2])
             self.model.RR = float(x[3])
-            self.model.N = int(x[4]*1000)
+            self.model.N = int(x[4]*100)
             self.model.feed_stage = int(x[5]*100)
             self.model.tray_spacing = float(x[6])
             runtime = self.model.run()
@@ -242,7 +242,7 @@ class Optimizer():
         except Exception as e:
             # If simulation cannot be run, return a large number
             self.time += runtime
-            print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4]*1000, x[5]*100, x[6], e, self.time))
+            print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4]*100, x[5]*100, x[6], e, self.time))
             self.func_iter += 1
             return np.inf
 
