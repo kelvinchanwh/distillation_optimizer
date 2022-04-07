@@ -7,7 +7,7 @@ import graph
 import initialize
 
 class Optimizer():
-    def __init__(self, model: model.Model, opt_tolerance: float = 0.01, eps: float = 1e-5, \
+    def __init__(self, model: model.Model, opt_tolerance: float = 0.01, \
         purityLB: float = 0.99, purityUB: float = 1.0,\
             recoveryLB: float = 0.99, recoveryUB: float = 1.0):
         self.opt_tolerance = opt_tolerance
@@ -222,7 +222,7 @@ class Optimizer():
             bounds = bounds,
             callback = self.callback,
             method='SLSQP', 
-            options={'disp': True, 'maxiter':2000, 'eps': self.eps}, 
+            options={'disp': True, 'maxiter':2000}, 
             tol = self.opt_tolerance
         )
         return result
