@@ -176,49 +176,49 @@ class Optimizer():
         x0 = [
             self.model.P_cond,
             initialize.min_RR(self.model), 
-            initialize.actual_N(self.model, self.recoveryLB), 
-            initialize.feed_stage(self.model, self.recoveryLB)
+            0.1,
+            0.1
             ]
         
         min_RR = initialize.min_RR(self.model, self.recoveryLB)
         min_N = initialize.min_N(self.model, self.recoveryLB)
 
-        bounds = (
-            (1.013, 10), # P_cond
-            (min_RR, 1.1 * min_RR), # RR
-            (min_N, 300), # N
-            (2, self.model.N-2), # feed_stage
-        )
+        # bounds = (
+        #     (1.013, 10), # P_cond
+        #     (min_RR, 1.1 * min_RR), # RR
+        #     (min_N, 300), # N
+        #     (2, self.model.N-2), # feed_stage
+        # )
 
         constraints = (
             # Results Constraint
-            {'type': 'ineq', 'fun': lambda x: self.model.purity[self.model.main_component] - self.purityLB},
-            {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.model.main_component]},
+            #{'type': 'ineq', 'fun': lambda x: self.model.purity[self.model.main_component] - self.purityLB},
+            #{'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.model.main_component]},
             {'type': 'ineq', 'fun': lambda x: self.model.recovery[self.model.main_component] - self.recoveryLB},
             {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.model.main_component]},
             {'type': 'ineq', 'fun': lambda x: self.model.stream_input_pres - self.model.P_stage[self.model.feed_stage-1]},
-            {'type': 'ineq', 'fun': self.weepingCheckTop},
+            #{'type': 'ineq', 'fun': self.weepingCheckTop}, +ve
             {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckTop},
             {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckTop},
             {'type': 'ineq', 'fun': self.entrainmentCheckTop},
             {'type': 'ineq', 'fun': self.entrainmentFracCheckTop},
-            {'type': 'ineq', 'fun': self.weepingCheckBottom},
+            #{'type': 'ineq', 'fun': self.weepingCheckBottom},
             {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckBottom},
             {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckBottom},
             {'type': 'ineq', 'fun': self.entrainmentCheckBottom},
             {'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
         )
 
-        print ('{0:4s}   {1:9s}   {2:9s}   {3:9s}   {4:9s}   {5:9s}   {6:9s}'.format('Iter', ' P_cond', 'RR', 'N', 'feed_stage', 'TAC', 'Runtime'))
-        print ('{0:4s}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:4s}'.format("Init", x0[0], x0[1], x0[2], x0[3], "----", self.time))
+        print ('{0:4s}   {1:9s}   {2:9s}   {3:9s}   {4:9s}   {5:9s}   {6:9s}'.format('Iter', ' P_cond', 'RR', 'PDrop1', 'PDrop2', 'TAC', 'Runtime'))
+        print ('{0:4s}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:9s}   {6:3.3f}'.format("Init", x0[0], x0[1], x0[2], x0[3], "----", self.time))
         result = opt.minimize(
             self.objective,
             x0, 
             constraints = constraints,
-            bounds = bounds,
+            bounds = opt.Bounds([1.013, 0.9 * min_RR, 0.1, 0.1], [10, 1.1 * min_RR, 1.0, 1.0], keep_feasible = True),
             callback = self.callback,
             method='SLSQP', 
-            options={'disp': True, 'maxiter':2000, 'eps': self.eps, 'ftol': self.ftol}, 
+            options={'disp': True, 'maxiter':2000}, #'eps': self.eps, 'ftol': self.ftol}, 
             tol = self.opt_tolerance
         )
         return result
@@ -227,16 +227,15 @@ class Optimizer():
         try:
             self.model.P_cond = float(x[0])
             self.model.RR = float(x[1])
-            self.model.N = int(x[2])
-            self.model.feed_stage = int(x[3])
+            self.model.P_drop_1 = float(x[2])
+            self.model.P_drop_2 = float(x[3])
             runtime = self.model.run()
             self.time += runtime
             self.func_iter += 1
-            return self.model.TAC/1000000
+            return self.model.TAC/100000
         except Exception as e:
             # If simulation cannot be run, return a large number
-            self.time += runtime
-            print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}'.format(self.func_iter, x[0], x[1], x[2], x[3], e, self.time))
+            print (e)
             self.func_iter += 1
             return np.inf
 
