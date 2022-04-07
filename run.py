@@ -16,7 +16,7 @@ model.run()
 print (model.TAC)
 
 # Optimize
-optimizer = opt.Optimizer(model, opt_tolerance=0.1, eps = 1e-5)
+optimizer = opt.Optimizer(model, opt_tolerance=1e-6)
 print (optimizer.run())
 
 # model.obj.Close()
