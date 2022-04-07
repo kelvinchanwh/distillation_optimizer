@@ -109,8 +109,7 @@ class Model:
 
     def set_pressure_stages(self):
         # Pressure
-        self.setValue(r"\Data\Blocks\B1\Input\PRES1", self.P_cond)
-        # TODO: Determibne which pressures to set first based on changes        
+        self.setValue(r"\Data\Blocks\B1\Input\PRES1", self.P_cond)       
         self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\1", self.P_drop_1)
         self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\2", self.P_drop_2)
         # If current 2nd start stage is smaller then upcoming 1st end stage, then set the upcoming 2nd start stage first
