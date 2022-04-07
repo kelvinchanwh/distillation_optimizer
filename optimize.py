@@ -166,7 +166,7 @@ class Optimizer():
 
     def callback(self, x):
         self.func_iter = 0
-        print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4]*100, x[5]*100, x[6], self.model.TAC, self.time))
+        print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4]*1000, x[5]*100, x[6], self.model.TAC, self.time))
         self.opt_iter += 1
 
     def optimize(self):
@@ -175,21 +175,21 @@ class Optimizer():
             self.model.P_drop_1, 
             self.model.P_drop_2, 
             initialize.min_RR(self.model), 
-            initialize.actual_N(self.model, self.recoveryLB)/100, 
+            initialize.actual_N(self.model, self.recoveryLB)/1000, 
             initialize.feed_stage(self.model, self.recoveryLB)/100, 
             self.model.tray_spacing
             ]
         
         min_RR = initialize.min_RR(self.model, self.recoveryLB)
-        min_N = initialize.min_N(self.model, self.recoveryLB)
+        min_N = 5 #initialize.min_N(self.model, self.recoveryLB)
 
         bounds = (
             (1.013, 10), # P_cond
             (0.01, 1.0), # P_drop_1
             (0.01, 1.0), # P_drop_2
             (min_RR, 1.1 * min_RR), # RR
-            (min_N/100, 300/100), # N
-            (2/100, (self.model.N-2)/100), # feed_stage
+            (min_N/1000, 300/1000), # N
+            (3/100, (self.model.N-3)/100), # feed_stage
             (0.15, 1), # tray_spacing
         )
 
@@ -213,7 +213,7 @@ class Optimizer():
         )
 
         print ('{0:4s}   {1:9s}   {2:9s}   {3:9s}   {4:9s}   {5:9s}   {6:9s}   {7:9s}   {8:9s}   {9:9s}'.format('Iter', ' P_cond', 'P_drop_1', 'P_drop_2', 'RR', 'N', 'feed_stage', 'tray_spacing', 'TAC', 'Runtime'))
-        print ('{0:4s}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:4s}   {9:3.3f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4]*100, x0[5]*100, x0[6], "----", self.time))
+        print ('{0:4s}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:4s}   {9:3.3f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4]*1000, x0[5]*100, x0[6], "----", self.time))
         result = opt.minimize(
             self.objective,
             x0, 
@@ -232,7 +232,7 @@ class Optimizer():
             self.model.P_drop_1 = float(x[1])
             self.model.P_drop_2 = float(x[2])
             self.model.RR = float(x[3])
-            self.model.N = int(x[4]*100)
+            self.model.N = int(x[4]*1000)
             self.model.feed_stage = int(x[5]*100)
             self.model.tray_spacing = float(x[6])
             runtime = self.model.run()
@@ -242,7 +242,7 @@ class Optimizer():
         except Exception as e:
             # If simulation cannot be run, return a large number
             self.time += runtime
-            print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4]*100, x[5]*100, x[6], e, self.time))
+            print ('{0:4d}   {1:3.3f}   {2:3.3f}   {3:3.3f}   {4:3.3f}   {5:3.3f}   {6:3.3f}   {7:3.3f}   {8:3.3f}   {9:3.3f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4]*1000, x[5]*100, x[6], e, self.time))
             self.func_iter += 1
             return np.inf
 
