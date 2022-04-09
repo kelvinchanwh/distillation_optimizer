@@ -7,8 +7,8 @@ import initialize
 class Model:
     def __init__(self, filepath: str, main_component: str = None, \
         P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, \
-            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, tray_eff: float = None, \
-            n_years: int = None):
+            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, \
+                tray_eff_1: float = None, tray_eff_2: float = None, n_years: int = None):
         """
         Design Parameters
         :param filepath: path to the model file
@@ -43,7 +43,8 @@ class Model:
         self.P_drop_1 = 0.01 if self.P_drop_1 == 0 else self.P_drop_1
         self.P_drop_2 = 0.01 if self.P_drop_2 == 0 else self.P_drop_2
 
-        self.tray_eff = tray_eff if tray_eff is not None else self.init_var()["tray_eff"]
+        self.tray_eff_1 = tray_eff_1 if tray_eff_1 is not None else self.init_var()["tray_eff_1"]
+        self.tray_eff_2 = tray_eff_2 if tray_eff_2 is not None else self.init_var()["tray_eff_2"]
         self.n_years = n_years if n_years is not None else self.init_var()["n_years"]
 
         # Create COM object (Import Aspen File as an Object)
@@ -60,11 +61,12 @@ class Model:
         # Get initial values
         return dict(
             RR = 0.924, 
-            N = 36,
-            feed_stage = 23, 
+            N = 101,
+            feed_stage = 51, 
             tray_spacing = 0.6096,
             num_pass = 1,
-            tray_eff = 0.5,
+            tray_eff_1 = 0.5,
+            tray_eff_2 = 0.5,
             P_cond = 1.12, #bar
             P_drop_1 = 0,
             P_drop_2 = 0,
@@ -72,15 +74,16 @@ class Model:
         )
 
     def update_manipulated(self, P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, \
-            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, tray_eff: float = None, \
-                n_years: int = None):
+            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, 
+                tray_eff_1: float = None, tray_eff_2: float = None, n_years: int = None):
         # Update manipulated variables
         self.RR = RR if RR is not None else self.RR
         self.N = N if N is not None else self.N
         self.feed_stage = feed_stage if feed_stage is not None else self.feed_stage
         self.tray_spacing = tray_spacing if tray_spacing is not None else self.tray_spacing
         self.num_pass = num_pass if num_pass is not None else self.num_pass
-        self.tray_eff = tray_eff if tray_eff is not None else self.tray_eff
+        self.tray_eff_1 = tray_eff_1 if tray_eff_1 is not None else self.tray_eff_1
+        self.tray_eff_2 = tray_eff_2 if tray_eff_2 is not None else self.tray_eff_2
         self.P_cond = P_cond if P_cond is not None else self.P_cond
         self.P_drop_1 = P_drop_1 if P_drop_1 is not None else self.P_drop_1
         self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.P_drop_2
@@ -137,7 +140,10 @@ class Model:
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_TSPACE\1", self.tray_spacing)    
         self.setValue(r"\Data\Blocks\B1\Input\BASIS_RR", self.RR)
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_NPASS\1", self.num_pass)
-        self.setValue(r"\Data\Blocks\B1\Input\STAGE_EFF\2", self.tray_eff)
+        self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_start_1, self.tray_eff_1)
+        self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_end_1, self.tray_eff_1)
+        self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_start_2, self.tray_eff_2)
+        self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_end_2, self.tray_eff_2)
 
     def simulate(self):
         """

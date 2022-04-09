@@ -7,7 +7,7 @@ import graph
 import initialize
 
 class Optimizer():
-    def __init__(self, model: model.Model, opt_tolerance: float = 0.01, \
+    def __init__(self, model: model.Model, opt_tolerance: float = 1e-5, \
         purityLB: float = 0.99, purityUB: float = 1.0,\
             recoveryLB: float = 0.99, recoveryUB: float = 1.0):
         self.opt_tolerance = opt_tolerance
@@ -174,7 +174,7 @@ class Optimizer():
 
     def callback(self, x):
         self.func_iter = 0
-        print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:3.9f}   {9:3.9f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4]*1e6, x[5], x[6], self.model.TAC, self.time))
+        print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:3.9f}   {9:3.9f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], self.model.TAC, self.time))
         self.opt_iter += 1
 
     def optimize(self):
@@ -183,8 +183,8 @@ class Optimizer():
             self.model.P_drop_1, 
             self.model.P_drop_2, 
             initialize.min_RR(self.model), 
-            initialize.feed_stage(self.model, self.recoveryLB)/1e6, 
-            self.model.tray_eff,
+            self.model.tray_eff_1, 
+            self.model.tray_eff_2,
             self.model.tray_spacing
             ]
 
@@ -207,16 +207,16 @@ class Optimizer():
             {'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
         )
 
-        print ('{0:4s}   {1:11s}   {2:11s}   {3:11s}   {4:11s}   {5:11s}   {6:11s}   {7:11s}   {8:11s}   {9:11s}'.format('Iter', ' P_cond', 'P_drop_1', 'P_drop_2', 'RR', 'feed_stage', 'tray_spacing', 'tray_eff', 'TAC', 'Runtime'))
-        print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:11s}   {9:3.9f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4]*1e6, x0[5], x0[6], "----", self.time))
+        print ('{0:4s}   {1:11s}   {2:11s}   {3:11s}   {4:11s}   {5:11s}   {6:11s}   {7:11s}   {8:11s}   {9:11s}'.format('Iter', ' P_cond', 'P_drop_1', 'P_drop_2', 'RR', 'tray_eff_1', 'tray_eff_2', 'tray_spacing', 'TAC', 'Runtime'))
+        print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:11s}   {9:3.9f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], "----", self.time))
         result = opt.minimize(
             self.objective,
             x0, 
             constraints = constraints,
-            bounds = opt.Bounds([1.013, 0.01, 0.01, 0.1, 0.1/1e6, 0.15, 0.3], [10.0, 1.0, 1.0, 0.99, 0.9/1e6, 1.0, 0.7], keep_feasible=True),
+            bounds = opt.Bounds([1.013, 0.01, 0.01, 0.1, 0.05, 0.05, 0.3], [10.0, 1.0, 1.0, 0.99, 1.0, 1.0, 0.7], keep_feasible=True),
             callback = self.callback,
             method='SLSQP', 
-            options={'disp': True, 'maxiter':2000, 'eps':2e-6}, 
+            options={'disp': True, 'maxiter':2000}, 
             tol = self.opt_tolerance
         )
         return result
@@ -227,16 +227,16 @@ class Optimizer():
             self.model.P_drop_1 = float(x[1])
             self.model.P_drop_2 = float(x[2])
             self.model.RR = float(x[3])
-            self.model.feed_stage = int(x[4]*self.model.N*1e6)
-            self.model.tray_spacing = float(x[5])
-            self.model.tray_eff = float(x[6])
+            self.model.tray_eff_1 = float(x[4])
+            self.model.tray_eff_2 = float(x[5])
+            self.model.tray_spacing = float(x[6])
             runtime = self.model.run()
             self.time += runtime
             self.func_iter += 1
             return self.model.TAC/1000000
         except Exception as e:
             # If simulation cannot be run, return a large number
-            print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:11s}   {9:3.9f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4]*1e6, x[5], x[6], e, self.time))
+            print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:11s}   {9:3.9f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], e, self.time))
             self.func_iter += 1
             return np.inf
 

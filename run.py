@@ -3,11 +3,13 @@ import model as m
 import optimize as opt
 
 model = m.Model ( 
-    filepath = os.path.join(os.getcwd(), 'Simulation 2.bkp'), 
-    N = 36,
+    filepath = os.path.join(os.getcwd(), 'Simulation 3.bkp'), 
+    N = 101,
     RR = 0.924,
     tray_spacing = 0.63636,
-    feed_stage = 23,
+    tray_eff_1 = 0.5,
+    tray_eff_2 = 0.5,
+    feed_stage = 51,
     P_cond = 1.013,
     main_component = "BENZENE"
 )
