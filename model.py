@@ -280,7 +280,7 @@ class Model:
         A_cond = abs(conversions.calPerSec_to_kJPerSec(self.Q_cond))/(U_cond * del_t_mean_cond)
         A_reb = abs(conversions.calPerSec_to_kJPerSec(self.Q_reb))/(U_reb * del_t_mean_reb)
 
-        self.height = 1.2 * self.tray_spacing * self.N
+        self.height = 1.2 * self.tray_spacing * self.N * 0.5 * (self.tray_eff_1 + self.tray_eff_2)
 
         C_cap_cond = 7296 * (A_cond ** 0.65)
         C_cap_reb = 7296 * (A_reb ** 0.65)
