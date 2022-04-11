@@ -183,8 +183,8 @@ class Optimizer():
             self.model.P_drop_1, 
             self.model.P_drop_2, 
             initialize.min_RR(self.model), 
-            self.model.tray_eff_1, 
-            self.model.tray_eff_2,
+            initialize.feed_stage(self.model, self.recoveryLB) / initialize.actual_N(self.model, self.recoveryLB), 
+            1 - (initialize.feed_stage(self.model, self.recoveryLB) / initialize.actual_N(self.model, self.recoveryLB)),
             self.model.tray_spacing
             ]
 
@@ -213,7 +213,7 @@ class Optimizer():
             self.objective,
             x0, 
             constraints = constraints,
-            bounds = opt.Bounds([1.013, 0.01, 0.01, 0.1, 0.05, 0.05, 0.3], [10.0, 1.0, 1.0, 0.99, 1.0, 1.0, 0.7], keep_feasible=True),
+            bounds = opt.Bounds([1.013, 0.01, 0.01, initialize.min_RR(self.model), 0.1, 0.1, 0.3], [10.0, 1.0, 1.0, 0.99, 1.0, 1.0, 0.7], keep_feasible=True),
             callback = self.callback,
             method='SLSQP', 
             options={'disp': True, 'maxiter':2000}, 
