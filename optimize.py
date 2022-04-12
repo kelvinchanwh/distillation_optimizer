@@ -239,7 +239,7 @@ class Optimizer():
             print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:11s}   {9:3.9f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], "ERROR", self.time))
             print (e)
             self.func_iter += 1
-            return np.inf
+            return self.model.TAC + 2 * self.opt_tolerance
 
     def run(self):
         result = self.optimize()
