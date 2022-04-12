@@ -75,9 +75,18 @@ def feed_stage(model: model, recovery_LB = 0.99):
 
     x_hd = (HK_flow_D/D)
     x_lb = (LK_flow_B/B)
-    val = 0.206 * np.log((model.D[-1]/model.D[0]) * (model.mole_frac[model.HK]/model.mole_frac[model.LK]) * ((x_lb/x_hd)**2.))
+    val = 0.206 * np.log((B/D) * (model.mole_frac[model.HK]/model.mole_frac[model.LK]) * ((x_lb/x_hd)**2.))
     nr_ns = np.exp(val)
     ns = int(actual_N(model)/ (1 + nr_ns))
     nr = int(actual_N(model) - ns)
     return nr
 
+def distilate_rate(model: model, recovery_LB = 0.99):
+    """
+    Calculate distilate rate.
+    """
+    LNK_flow_D = sum([model.mole_flow[component] for component in model.components if model.K[component] > model.K[model.LK]])
+    LK_flow_D = recovery_LB * model.mole_flow[model.LK] 
+    HK_flow_D = (1-recovery_LB) * model.mole_flow[model.HK] 
+    D = LNK_flow_D + LK_flow_D + HK_flow_D
+    return D

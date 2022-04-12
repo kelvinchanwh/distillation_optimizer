@@ -7,8 +7,9 @@ import initialize
 class Model:
     def __init__(self, filepath: str, main_component: str = None, \
         P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, \
-            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, \
-                tray_eff_1: float = None, tray_eff_2: float = None, n_years: int = None):
+            RR: float = None, distilate_rate: float = None, N: float = None, feed_stage: float = None, \
+                tray_spacing: float = None, num_pass: int = None, \
+                    tray_eff_1: float = None, tray_eff_2: float = None, n_years: int = None):
         """
         Design Parameters
         :param filepath: path to the model file
@@ -31,6 +32,7 @@ class Model:
         self.filepath = filepath
 
         self.RR = RR if RR is not None else self.init_var()["RR"]
+        self.distilate_rate = distilate_rate if distilate_rate is not None else self.init_var()["distilate_rate"]
         self.N = N if N is not None else self.init_var()["N"]
         self.feed_stage = feed_stage if feed_stage is not None else self.init_var()["feed_stage"]
         self.tray_spacing = tray_spacing if tray_spacing is not None else self.init_var()["tray_spacing"]
@@ -61,6 +63,7 @@ class Model:
         # Get initial values
         return dict(
             RR = 1.0, 
+            distilate_rate = 50.0, 
             N = 101, 
             feed_stage = 51, 
             tray_spacing = 0.6096, #Default from Aspen
@@ -74,10 +77,12 @@ class Model:
         )
 
     def update_manipulated(self, P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, \
-            RR: float = None, N: float = None, feed_stage: float = None, tray_spacing: float = None, num_pass: int = None, 
-                tray_eff_1: float = None, tray_eff_2: float = None, n_years: int = None):
+            RR: float = None, N: float = None, distilate_rate: float = None, feed_stage: float = None, 
+                tray_spacing: float = None, num_pass: int = None, \
+                    tray_eff_1: float = None, tray_eff_2: float = None, n_years: int = None):
         # Update manipulated variables
         self.RR = RR if RR is not None else self.RR
+        self.distilate_rate = distilate_rate if distilate_rate is not None else self.distilate_rate
         self.N = N if N is not None else self.N
         self.feed_stage = feed_stage if feed_stage is not None else self.feed_stage
         self.tray_spacing = tray_spacing if tray_spacing is not None else self.tray_spacing
@@ -139,6 +144,7 @@ class Model:
         self.setValue(r"\Data\Blocks\B1\Input\FEED_STAGE\1", self.feed_stage)
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_TSPACE\1", self.tray_spacing)    
         self.setValue(r"\Data\Blocks\B1\Input\BASIS_RR", self.RR)
+        self.setValue(r"\Data\Blocks\B1\Input\BASIS_D", self.distilate_rate)
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_NPASS\1", self.num_pass)
         self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_start_1, self.tray_eff_1)
         self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_end_1, self.tray_eff_1)
