@@ -60,14 +60,14 @@ class Model:
     def init_var(self):
         # Get initial values
         return dict(
-            RR = 0.924, 
-            N = 101,
+            RR = 1.0, 
+            N = 101, 
             feed_stage = 51, 
-            tray_spacing = 0.6096,
+            tray_spacing = 0.6096, #Default from Aspen
             num_pass = 1,
             tray_eff_1 = 0.5,
             tray_eff_2 = 0.5,
-            P_cond = 1.12, #bar
+            P_cond = 1.013, #Atmospheric Pressure (bar)
             P_drop_1 = 0,
             P_drop_2 = 0,
             n_years = 3
