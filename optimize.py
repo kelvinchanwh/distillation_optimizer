@@ -238,7 +238,7 @@ class Optimizer():
             return self.model.TAC/1000000
         except Exception as e:
             # If simulation cannot be run, return a large number
-            print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:3.9f}   {9:11s}   {10:3.9f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], "ERROR", self.time))
+            print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:3.9f}   {9:11s}   {10:3.9f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], "ERROR", self.time))
             print (e)
             self.func_iter += 1
             return self.model.TAC + 2 * self.opt_tolerance
