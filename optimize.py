@@ -215,7 +215,7 @@ class Optimizer():
             self.objective,
             x0, 
             constraints = constraints,
-            bounds = opt.Bounds([1.013, 0.01, 0.01, initialize.min_RR(self.model), 0.1, 0.1, 0.3], [10.0, 1.0, 1.0, 1.16 * initialize.min_RR(self.model), 1.0, 1.0, 0.7], keep_feasible=True),
+            bounds = opt.Bounds([1.013, 0.01, 0.01, initialize.min_RR(self.model), 0.1, 0.1, 0.3], [10.0, 1.0, 1.0, 1.2 * initialize.min_RR(self.model), 1.0, 1.0, 0.7], keep_feasible=True),
             callback = self.callback,
             method='SLSQP', 
             options={'disp': True, 'maxiter':2000}, 
