@@ -207,8 +207,8 @@ class Optimizer():
             {'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
         )
 
-        self.model.distilate_rate = initialize.distilate_rate(model, recovery_LB=self.recoveryLB)
-        
+        self.model.distilate_rate = initialize.distilate_rate(self.model, recovery_LB=self.recoveryLB)
+
         print ('{0:4s}   {1:11s}   {2:11s}   {3:11s}   {4:11s}   {5:11s}   {6:11s}   {7:11s}   {8:11s}   {9:11s}'.format('Iter', ' P_cond', 'P_drop_1', 'P_drop_2', 'RR', 'tray_eff_1', 'tray_eff_2', 'tray_spacing', 'TAC', 'Runtime'))
         print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:11s}   {9:3.9f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], "----", self.time))
         result = opt.minimize(
