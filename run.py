@@ -3,6 +3,7 @@ import model as m
 import optimize as opt
 
 model = m.Model ( 
+    # Hydraulics Simulation 3, No Hydraulics: Simulation 4
     filepath = os.path.join(os.getcwd(), 'Simulation 3.bkp'), 
     N = 101,
     RR = 0.924,
@@ -18,7 +19,7 @@ model.run()
 print (model.TAC)
 
 # Optimize
-optimizer = opt.Optimizer(model, opt_tolerance=1e-3)
+optimizer = opt.Optimizer(model, opt_tolerance=1e-3, hydraulics = True)
 print (optimizer.run())
 
 # model.obj.Close()
