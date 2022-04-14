@@ -62,9 +62,9 @@ class Optimizer():
         
     def func_h_ow(self, value, section):
         if value == 'max':
-            return (self.func_max_liquid_flow_rate(section) / (self.func_density_liquid(section) * self.func_density_vapour(section)) ** (2./3)) * 1000  # Conversion to mm
+            return ((self.func_max_liquid_flow_rate(section) / (self.func_density_liquid(section) * self.model.weir_length)) ** (2./3)) * 1000  # Conversion to mm
         else:
-            return (self.func_min_liquid_flow_rate(section) / (self.func_density_liquid(section) * self.func_density_vapour(section)) ** (2./3)) * 1000  # Conversion to mm
+            return ((self.func_min_liquid_flow_rate(section) / (self.func_density_liquid(section) * self.model.weir_length)) ** (2./3)) * 1000  # Conversion to mm
 
     def func_h_w_h_ow_min(self, section):
         return self.h_w + self.func_h_ow('min', section)
