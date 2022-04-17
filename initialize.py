@@ -52,7 +52,7 @@ def actual_N (model: model, recovery_LB = 0.99):
     """
     Calculate actual number of stages.
     """
-    psi = (1.2 - 1) * min_RR(model) / ((1.2 * min_RR(model)) + 1)
+    psi = (1.1 - 1) * min_RR(model) / ((1.1 * min_RR(model)) + 1)
     rhs = 1 - np.exp(((1 + 54.5 * psi) * (psi-1)) / ((11 + 117.2 * psi) * (psi ** 0.5)))
     N = (min_N(model, recovery_LB) + rhs)/(1-rhs)
     return int(math.ceil(N))
