@@ -107,9 +107,15 @@ class Optimizer():
     def func_flooding_vapour_velocity(self, section):
         return graph.K1(self.func_f_lv(section), self.model.tray_spacing) * (((self.func_density_liquid(section) - self.func_density_vapour(section))/self.func_density_vapour(section)) ** (1./2))
 
+    def func_u_n(self, section):
+        return self.frac_appr_flooding * self.func_flooding_vapour_velocity(section)
+
+    def func_net_area_required(self):
+        return max(self.func_volume_flow_vapour(section)/self.func_u_n(section) for section in ['top', 'bottom'])
+
     def func_percent_flooding(self, section):
-        u_n = self.func_volume_flow_vapour(section) / self.func_net_area()
-        return u_n / self.func_flooding_vapour_velocity(section)
+        u_v = self.func_volume_flow_vapour(section) / self.func_net_area_required()
+        return u_v / self.func_flooding_vapour_velocity(section)
 
     def entrainmentCheck(self, section):
         return self.frac_appr_flooding - self.func_percent_flooding(section) # percent of flooding should be less than frac_appr_flooding
