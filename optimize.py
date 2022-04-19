@@ -7,7 +7,7 @@ import graph
 import initialize
 
 class Optimizer():
-    def __init__(self, model: model.Model, opt_tolerance: float = 1e-5, hydraulics = True, \
+    def __init__(self, model: model.Model, opt_tolerance: float = 1e-5, hydraulics = True, tray_type = 'sieve', \
         purityLB: float = 0.99, purityUB: float = 1.0,\
             recoveryLB: float = 0.99, recoveryUB: float = 1.0):
         self.opt_tolerance = opt_tolerance
@@ -21,11 +21,20 @@ class Optimizer():
         self.purityUB = purityUB
         self.recoveryLB = recoveryLB
         self.recoveryUB = recoveryUB
+        self.tray_type = tray_type
 
         self.h_w = 50 #mm (Assumption)
         self.hole_diameter = 5 #mm (Assumption)
         self.plate_thickness = 5 #mm (Assumption)
         self.frac_appr_flooding = 0.8 #Assumption
+
+        # Assumptions from "Design of equilibrium stage processes" Pg 527 Table 14.3
+        self.slot_shape_ratio = 0.5 #Assume trapezoidal slots
+        self.slot_height = conversions.inch_to_m(1.250) #Assume 1.25 inch slot height
+        self.riser_area_per_tray = conversions.sqft_to_m2(18.7) #Assume 18.7 sq ft riser area per tray
+        self.static_seal = conversions.inch_to_m(0.5) #Assume 0.5 inch static seal
+        self.annular_riser_area_ratio = 1.25 #Assume 1.25:1 annular riser area ratio
+        self.A_da = conversions.sqft_to_m2(1.0) # Minimum area under downflow apron = 1sqft
 
     def func_net_area(self):
         return self.model.A_c - self.model.A_d
@@ -79,12 +88,21 @@ class Optimizer():
         return (self.h_w - 10) * self.model.weir_length * (10 ** -3) # Change to m
 
     def func_h_dc(self, section):
-        return 166 * ((self.func_max_liquid_flow_rate(section) / (self.func_density_liquid(section) * (self.model.A_d if self.model.A_d<self.func_A_ap() else self.func_A_ap())))**2)
+        if self.tray_type == 'sieve':
+            return 166 * ((self.func_max_liquid_flow_rate(section) / (self.func_density_liquid(section) * (self.model.A_d if self.model.A_d<self.func_A_ap() else self.func_A_ap())))**2)
+        elif self.tray_type == 'bubblecap':
+            return self.func_h_t(section) + self.h_w + self.func_h_ow('max', section) + self.func_delta() + self.func_h_da(section)
+
+    def func_h_da(self, section):
+        Lw = conversions.m_to_inch(self.weir_length)
+        A_da = conversions.m2_to_sqft(self.A_da)
+        return conversions.inch_to_m(0.03 * (Lw/2/100/A_da) ** 2)
 
     def func_max_vapour_vel(self, section):
         return self.func_volume_flow_vapour(section) / self.func_hole_area()
 
     def func_h_d(self, section):
+        # TODO: Bubble Cap Change for Orifice
         orifice_coeff = graph.orifice((self.func_hole_area()/self.func_active_area()), self.plate_thickness/self.hole_diameter)
         return 51 * ((self.func_max_vapour_vel(section) / orifice_coeff) **2) * (self.func_density_vapour(section)/self.func_density_liquid(section))
 
@@ -92,7 +110,17 @@ class Optimizer():
         return 12500 / self.func_density_liquid(section)
 
     def func_h_t(self, section):
-        return self.func_h_d(section) + self.h_w + self.func_h_ow('max', section) + self.func_h_r(section)
+        if self.tray_type == 'sieve':
+            return self.func_h_d(section) + self.h_w + self.func_h_ow('max', section) + self.func_h_r(section)
+        elif self.tray_type == 'bubblecap':
+            return self.func_h_cd(section) + self.func_h_so(section) + self.func_h_al(section)
+
+    def func_h_al(self, section):
+        volume_flow_vapour = conversions.m3Sec_to_cfs(self.func_volume_flow_vapour(section))
+        active_area = conversions.m2_to_sqft(self.func_active_area())
+        density_vapour = conversions.kgM3_to_lbFt3(self.func_density_vapour(section))
+        F_va = volume_flow_vapour / active_area * (density_vapour ** (1./2))
+        return graph.aeration_factor(F_va) # Fig 14.15
 
     def func_h_b(self, section):
         # NOTE: Need to round up h_dc?
@@ -105,7 +133,7 @@ class Optimizer():
         return (self.func_L(section) / self.func_v()) * ((self.func_density_vapour(section) / self.func_density_liquid(section)) ** (1./2))
 
     def func_flooding_vapour_velocity(self, section):
-        return graph.K1(self.func_f_lv(section), self.model.tray_spacing) * (((self.func_density_liquid(section) - self.func_density_vapour(section))/self.func_density_vapour(section)) ** (1./2))
+        return graph.K1(self.func_f_lv(section), self.model.tray_spacing, self.tray_type) * (((self.func_density_liquid(section) - self.func_density_vapour(section))/self.func_density_vapour(section)) ** (1./2))
 
     def func_u_n(self, section):
         return self.frac_appr_flooding * self.func_flooding_vapour_velocity(section)
@@ -117,23 +145,120 @@ class Optimizer():
         u_v = self.func_volume_flow_vapour(section) / self.func_net_area_required()
         return u_v / self.func_flooding_vapour_velocity(section)
 
+    def func_q_max(self, section):
+        As = 0.12 * conversions.m2_to_sqin(self.func_active_area())
+        Rs = self.slot_shape_ratio
+        slot_height = conversions.m_to_inch(self.slot_height)
+        density_liquid = conversions.kgM3_to_lbFt3(self.func_density_liquid(section))
+        density_vapour = conversions.kgM3_to_lbFt3(self.func_density_vapour(section))
+        qMax = 2.36 * As * ((2./3) * (Rs/(1+Rs)) + (4./15) * ((1-Rs)/(1+Rs))) * ((slot_height * (density_liquid - density_vapour)/ density_vapour) ** (1./2))
+        return conversions.cfs_to_m3Sec(qMax)
+
+    def func_h_cd(self, section):
+        density_liquid = conversions.kgM3_to_lbFt3(self.func_density_liquid(section))
+        density_vapour = conversions.kgM3_to_lbFt3(self.func_density_vapour(section))
+        volume_flow_vapour = conversions.m3Sec_to_cfs(self.func_volume_flow_vapour(section))
+        riser_area = conversions.m2_to_sqft(self.riser_area_per_tray)
+        h_cd = graph.dry_cap_coeff(self.annular_riser_area_ratio) * density_vapour/density_liquid * (volume_flow_vapour/riser_area)**2
+        return conversions.inch_to_m(h_cd)
+
+    def func_h_so(self, section):
+        vapour_load = self.func_volume_flow_vapour(section) / self.func_q_max(section)
+        slot_opening_slot_height = graph.slot_opening_corelation(vapour_load) # Fuig 14.6 Pg 504
+        return self.slot_height * slot_opening_slot_height
+
+    def func_weeping_check(self, section):
+        return self.func_percent_flooding(section) > 0.5
+
+    def func_delta(self):
+        return conversions.inch_to_m(1.3) #Assume delta of 1.3 inches
+    
+    def func_q(self, section):
+        A_da = conversions.m2_to_sqft(self.func_A_da(section))
+        h_da = conversions.m_to_inch(self.func_h_da(section))
+        g = conversions.m_to_ft(9.81)
+        q = 0.6 * A_da * ((2 * g * h_da / 12)**(1./2))
+        return conversions.m3Sec_to_cfs(q)
+
+    def func_t_dc (self, section):
+        A_d = conversions.m2_to_sqft(self.func_A_d(section))
+        h_dc = conversions.m_to_inch(self.func_h_dc(section))
+        t_dc = A_d * h_dc / (12 * conversions.cfs_to_m3Sec(self.func_q(section)))
+        return t_dc
+
+    def func_h_c(self, section):
+        self.func_h_cd(section) + self.func_h_so(section)
+
+    def func_h_ds(self, section):
+        static_slot_seal = conversions.m_to_inch(self.static_seal)
+        h_ow = conversions.m_to_inch(self.func_h_ow('max', section)/1000)
+        delta = conversions.m_to_inch(self.func_delta())
+        return conversions.inch_to_m(static_slot_seal + h_ow + delta/2)
+
+    def func_h_fd(self, section):
+        return self.func_h_dc(section) / 0.5
+
     def entrainmentCheck(self, section):
         return self.frac_appr_flooding - self.func_percent_flooding(section) # percent of flooding should be less than frac_appr_flooding
 
     def entrainmentFracCheck(self, section):
-        frac_entrainment = graph.frac(self.func_f_lv(section), self.func_percent_flooding(section))
+        frac_entrainment = graph.frac(self.func_f_lv(section), self.func_percent_flooding(section),self.tray_type)
         return 0.1 - frac_entrainment # frac_entrainment should be less than 0.1
+
+    def slotOpeningCheck(self, section):
+        vapour_load = self.func_volume_flow_vapour(section) / self.func_q_max(section)
+        slot_opening_slot_height = graph.slot_opening_corelation(vapour_load) # Fig 14.6 Pg 504
+        return 1 - slot_opening_slot_height
+
+    def slotSealLBCheck(self, section):
+        return conversions.m_to_inch(self.func_h_ds(section)) - 1.0
+
+    def slotSealUBCheck(self, section):
+        return 2.6 - conversions.m_to_inch(self.func_h_ds(section))
+
+    def vapourDistRatioCheck(self, section):
+        return 0.5 - (self.func_delta() / self.func_h_c(section))
 
     def weepingCheck(self, section):
         # actual_min_vapour_vel > min_vapour_vel
         return (self.func_actual_min_vapour_vel(section) - self.func_min_vapour_vel(section))/5.0 # Scale for constraints
 
     def downcomerLiquidBackupCheck(self, section):
-        return  0.5 * (self.model.tray_spacing + (self.h_w/1000)) - self.func_h_b(section)/1000 # Should be larger than 0 (pg 882 towler sinnot)
+        if self.tray_type == 'sieve':
+            return  0.5 * (self.model.tray_spacing + (self.h_w/1000)) - self.func_h_b(section)/1000 # Should be larger than 0 (pg 882 towler sinnot)
+        elif self.tray_type == 'bubblecap':
+            return self.model.tray_spacing + (self.h_w/1000) - self.func_h_fd(section)/1000 # Should be larger than 0
     
     def downcomerResidenceTimeCheck(self, section):
-        self.residence_time = (self.model.A_d * self.func_h_b(section) * (10 ** -3) * self.func_density_liquid(section)) / (self.func_max_liquid_flow_rate(section))
+        if self.tray_type == 'sieve':
+            self.residence_time = (self.model.A_d * self.func_h_b(section) * (10 ** -3) * self.func_density_liquid(section)) / (self.func_max_liquid_flow_rate(section))
+        elif self.tray_type == 'bubblecap':
+            self.residence_time = self.func_t_dc(section)
         return (self.residence_time - 3)/10.0 # Should be larger than 3s # Scale for constraints
+
+    def slotOpeningCheckTop(self, x):
+        return self.slotOpeningCheck('top')
+
+    def slotOpeningCheckBottom(self, x):
+        return self.slotOpeningCheck('bottom')
+
+    def slotSealLBCheckTop(self, x):
+        return self.slotSealLBCheck('top')
+    
+    def slotSealLBCheckBottom(self, x):
+        return self.slotSealLBCheck('bottom')
+
+    def slotSealUBCheckTop(self, x):
+        return self.slotSealUBCheck('top')
+    
+    def slotSealUBCheckBottom(self, x):
+        return self.slotSealUBCheck('bottom')
+
+    def vapourDistRatioCheckTop(self, x):
+        return self.vapourDistRatioCheck('top')
+
+    def vapourDistRatioCheckBottom(self, x):
+        return self.vapourDistRatioCheck('bottom')
 
     def weepingCheckTop(self, x):
         return self.weepingCheck('top')
@@ -193,24 +318,50 @@ class Optimizer():
                 self.model.tray_spacing,
                 ]
 
-            constraints = (
-                # Results Constraint
-                {'type': 'ineq', 'fun': lambda x: self.model.purity[self.model.main_component] - self.purityLB},
-                {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.model.main_component]},
-                {'type': 'ineq', 'fun': lambda x: self.model.recovery[self.model.main_component] - self.recoveryLB},
-                {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.model.main_component]},
-                {'type': 'ineq', 'fun': self.inputPresCheck},
-                {'type': 'ineq', 'fun': self.weepingCheckTop},
-                {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckTop},
-                {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckTop},
-                {'type': 'ineq', 'fun': self.entrainmentCheckTop},
-                {'type': 'ineq', 'fun': self.entrainmentFracCheckTop},
-                {'type': 'ineq', 'fun': self.weepingCheckBottom},
-                {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckBottom},
-                {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckBottom},
-                {'type': 'ineq', 'fun': self.entrainmentCheckBottom},
-                {'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
-            )
+            if self.tray_type == 'sieve':
+                constraints = (
+                    # Results Constraint
+                    {'type': 'ineq', 'fun': lambda x: self.model.purity[self.model.main_component] - self.purityLB},
+                    {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.model.main_component]},
+                    {'type': 'ineq', 'fun': lambda x: self.model.recovery[self.model.main_component] - self.recoveryLB},
+                    {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.model.main_component]},
+                    {'type': 'ineq', 'fun': self.inputPresCheck},
+                    {'type': 'ineq', 'fun': self.weepingCheckTop},
+                    {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckTop},
+                    {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckTop},
+                    {'type': 'ineq', 'fun': self.entrainmentCheckTop},
+                    {'type': 'ineq', 'fun': self.entrainmentFracCheckTop},
+                    {'type': 'ineq', 'fun': self.weepingCheckBottom},
+                    {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckBottom},
+                    {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckBottom},
+                    {'type': 'ineq', 'fun': self.entrainmentCheckBottom},
+                    {'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
+                )
+            elif self.tray_type == 'bubblecap':
+                constraints = (
+                    # Results Constraint
+                    {'type': 'ineq', 'fun': lambda x: self.model.purity[self.model.main_component] - self.purityLB},
+                    {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.model.main_component]},
+                    {'type': 'ineq', 'fun': lambda x: self.model.recovery[self.model.main_component] - self.recoveryLB},
+                    {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.model.main_component]},
+                    {'type': 'ineq', 'fun': self.inputPresCheck},
+                    {'type': 'ineq', 'fun': self.entrainmentCheckTop},
+                    {'type': 'ineq', 'fun': self.entrainmentFracCheckTop},
+                    {'type': 'ineq', 'fun': self.slotOpeningCheckTop},
+                    {'type': 'ineq', 'fun': self.slotSealLBCheckTop},
+                    {'type': 'ineq', 'fun': self.slotSealUBCheckTop},
+                    {'type': 'ineq', 'fun': self.vapourDistRatioCheckTop},
+                    {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckTop},
+                    {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckTop},
+                    {'type': 'ineq', 'fun': self.entrainmentCheckBottom},
+                    {'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
+                    {'type': 'ineq', 'fun': self.slotOpeningCheckBottom},
+                    {'type': 'ineq', 'fun': self.slotSealLBCheckBottom},
+                    {'type': 'ineq', 'fun': self.slotSealUBCheckBottom},
+                    {'type': 'ineq', 'fun': self.vapourDistRatioCheckBottom},
+                    {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckBottom},
+                    {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckBottom},
+                )
             
             self.model.distilate_rate = initialize.distilate_rate(self.model, recovery_LB=self.recoveryLB)
 

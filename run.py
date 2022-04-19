@@ -19,7 +19,7 @@ model.run()
 print (model.TAC)
 
 # Optimize
-optimizer = opt.Optimizer(model, opt_tolerance=1e-3, hydraulics = True)
+optimizer = opt.Optimizer(model, opt_tolerance=1e-3, hydraulics = True, recoveryLB=0.95, purityLB=0.95, tray_type='sieve')
 print (optimizer.run())
 
 # model.obj.Close()
