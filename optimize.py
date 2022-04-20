@@ -7,12 +7,11 @@ import graph
 import initialize
 
 class Optimizer():
-    def __init__(self, model: model.Model, opt_tolerance: float = 1e-5, hydraulics = True, \
+    def __init__(self, model: model.Model, opt_tolerance: float = 1e-5, \
         purityLB: float = 0.99, purityUB: float = 1.0,\
             recoveryLB: float = 0.99, recoveryUB: float = 1.0):
         self.opt_tolerance = opt_tolerance
         self.model = model
-        self.hydraulics = hydraulics
         self.time = 0
         self.func_iter = 0
         self.opt_iter = 0
@@ -301,14 +300,15 @@ class Optimizer():
 
     def callback(self, x):
         self.func_iter = 0
-        if self.hydraulics == True:
+        if self.model.hydraulics == True:
             print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:3.9f}   {9:3.9f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], self.model.TAC, self.time))
         else:
             print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4], self.model.TAC, self.time))
         self.opt_iter += 1
 
     def optimize(self):
-        if self.hydraulics == True:
+        self.model.distilate_rate = initialize.distilate_rate(self.model, recovery_LB=self.recoveryLB)
+        if self.model.hydraulics == True:
             x0 = [
                 self.model.P_cond, 
                 self.model.P_drop_1, 
@@ -364,8 +364,6 @@ class Optimizer():
                     {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckBottom},
                 )
             
-            self.model.distilate_rate = initialize.distilate_rate(self.model, recovery_LB=self.recoveryLB)
-
             print ('{0:4s}   {1:11s}   {2:11s}   {3:11s}   {4:11s}   {5:11s}   {6:11s}   {7:11s}   {8:11s}   {9:11s}'.format('Iter', ' P_cond', 'P_drop_1', 'P_drop_2', 'RR', 'tray_eff_1', 'tray_eff_2', 'tray_spacing', 'TAC', 'Runtime'))
             print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:11s}   {9:3.9f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], "----", self.time))
             result = opt.minimize(
@@ -396,8 +394,6 @@ class Optimizer():
                 {'type': 'ineq', 'fun': self.inputPresCheck},
                 )
 
-            self.model.distilate_rate = initialize.distilate_rate(self.model, recovery_LB=self.recoveryLB)
-
             print ('{0:4s}   {1:11s}   {2:11s}   {3:11s}   {4:11s}   {5:11s}   {6:11s}   {7:11s}'.format('Iter', ' P_cond', 'RR', 'tray_eff_1', 'tray_eff_2', 'tray_spacing', 'TAC', 'Runtime'))
             print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:11s}   {7:3.9f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4], "----", self.time))
             result = opt.minimize(
@@ -414,7 +410,7 @@ class Optimizer():
 
     def objective(self, x):
         try:
-            if self.hydraulics == True:
+            if self.model.hydraulics == True:
                 self.model.P_cond = float(x[0])
                 self.model.P_drop_1 = float(x[1])
                 self.model.P_drop_2 = float(x[2])
@@ -434,7 +430,7 @@ class Optimizer():
             return self.model.TAC/1000000
         except Exception as e:
             # If simulation cannot be run, return a large number
-            if self.hydraulics == True:
+            if self.model.hydraulics == True:
                 print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:11s}   {9:3.9f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], "ERROR", self.time))
             else:
                 print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:11s}   {7:3.9f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], "ERROR", self.time))

@@ -5,7 +5,7 @@ import time
 import collections
 import initialize
 class Model:
-    def __init__(self, filepath: str, main_component: str = None, \
+    def __init__(self, filepath: str, main_component: str = None, hydraulics: bool = None,\
         P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, \
             RR: float = None, distilate_rate: float = None, N: float = None, feed_stage: float = None, \
                 tray_spacing: float = None, tray_type: str = None, num_pass: int = None, \
@@ -41,6 +41,7 @@ class Model:
         self.P_cond = P_cond if P_cond is not None else self.init_var()["P_cond"]
         self.P_drop_1 = P_drop_1 if P_drop_1 is not None else self.init_var()["P_drop_1"]
         self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.init_var()["P_drop_2"]
+        self.hydraulics = hydraulics if hydraulics is not None else self.init_var()["hydraulics"]
 
         # Minimum pressure drop is 0.01 bar
         self.P_drop_1 = 0.01 if self.P_drop_1 == 0 else self.P_drop_1
@@ -75,10 +76,11 @@ class Model:
             P_cond = 1.013, #Atmospheric Pressure (bar)
             P_drop_1 = 0,
             P_drop_2 = 0,
-            n_years = 3
+            n_years = 3,
+            hydraulics = True
         )
 
-    def update_manipulated(self, P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, \
+    def update_manipulated(self, hydraulics: bool = None, P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, \
             RR: float = None, N: float = None, distilate_rate: float = None, feed_stage: float = None, 
                 tray_spacing: float = None, tray_type: str = None, num_pass: int = None, \
                     tray_eff_1: float = None, tray_eff_2: float = None, n_years: int = None):
@@ -96,6 +98,7 @@ class Model:
         self.P_drop_1 = P_drop_1 if P_drop_1 is not None else self.P_drop_1
         self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.P_drop_2
         self.n_years = n_years if n_years is not None else self.n_years
+        self.hydraulics = hydraulics if hydraulics is not None else self.hydraulics
 
         # Minimum pressure drop is 0.01 bar
         self.P_drop_1 = 0.01 if self.P_drop_1 == 0 else self.P_drop_1
@@ -120,25 +123,30 @@ class Model:
 
     def set_pressure_stages(self):
         # Pressure
-        self.setValue(r"\Data\Blocks\B1\Input\PRES1", self.P_cond)       
-        self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\1", self.P_drop_1)
-        self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\2", self.P_drop_2)
-        # If current 2nd start stage is smaller then upcoming 1st end stage, then set the upcoming 2nd start stage first
-        self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\1", self.P_start_1)
-        curr2start = self.getValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2")
-        curr2end = self.getValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2")
-        if (self.P_end_1 >= curr2start):
-            if (self.P_end_2 >= curr2end):
-                self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
-                self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2", self.P_start_2)
+        self.setValue(r"\Data\Blocks\B1\Input\PRES1", self.P_cond)
+        if self.hydraulics == True:
+            self.setValue("\\Data\\Blocks\\B1\\Input\\VIEW_PRES", "PDROP")
+            self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\1", self.P_drop_1)
+            self.setValue(r"\Data\Blocks\B1\Input\PDROP_SEC\2", self.P_drop_2)
+            # If current 2nd start stage is smaller then upcoming 1st end stage, then set the upcoming 2nd start stage first
+            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\1", self.P_start_1)
+            curr2start = self.getValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2")
+            curr2end = self.getValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2")
+            if (self.P_end_1 >= curr2start):
+                if (self.P_end_2 >= curr2end):
+                    self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
+                    self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2", self.P_start_2)
+                else:
+                    self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2", self.P_start_2)
+                    self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
+                self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\1", self.P_end_1)
             else:
+                self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\1", self.P_end_1)
                 self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2", self.P_start_2)
                 self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
-            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\1", self.P_end_1)
         else:
-            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\1", self.P_end_1)
-            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE1\2", self.P_start_2)
-            self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
+            self.setValue("\\Data\\Blocks\\B1\\Input\\VIEW_PRES", "TOP/BOTTOM")
+            self.setValue("\\Data\\Blocks\\B1\\Input\\DP_STAGE", self.P_drop_1)
         # Hydraulic Ending Stage = N - 1
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_STAGE2\1", self.N - 1)
 
