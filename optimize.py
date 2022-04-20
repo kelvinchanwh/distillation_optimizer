@@ -214,10 +214,10 @@ class Optimizer():
         return conversions.m_to_inch(self.func_h_ds(section)) - 1.0
 
     def slotSealUBCheck(self, section):
-        return 2.6 - conversions.m_to_inch(self.func_h_ds(section))
+        return (2.6 - conversions.m_to_inch(self.func_h_ds(section)))/10.0 # Scale for constraints
 
     def vapourDistRatioCheck(self, section):
-        return 0.5 - (self.func_delta() / self.func_h_c(section))
+        return (0.5 - (self.func_delta() / self.func_h_c(section)))/10.0 # Scale for constraints
 
     def weepingCheck(self, section):
         # actual_min_vapour_vel > min_vapour_vel
@@ -351,7 +351,7 @@ class Optimizer():
                     {'type': 'ineq', 'fun': self.slotOpeningCheckTop},
                     {'type': 'ineq', 'fun': self.slotSealLBCheckTop},
                     {'type': 'ineq', 'fun': self.slotSealUBCheckTop},
-                    {'type': 'ineq', 'fun': self.vapourDistRatioCheckTop},
+                    # {'type': 'ineq', 'fun': self.vapourDistRatioCheckTop},
                     {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckTop},
                     {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckTop},
                     {'type': 'ineq', 'fun': self.entrainmentCheckBottom},
@@ -359,7 +359,7 @@ class Optimizer():
                     {'type': 'ineq', 'fun': self.slotOpeningCheckBottom},
                     {'type': 'ineq', 'fun': self.slotSealLBCheckBottom},
                     {'type': 'ineq', 'fun': self.slotSealUBCheckBottom},
-                    {'type': 'ineq', 'fun': self.vapourDistRatioCheckBottom},
+                    # {'type': 'ineq', 'fun': self.vapourDistRatioCheckBottom},
                     {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckBottom},
                     {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckBottom},
                 )
