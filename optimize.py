@@ -34,6 +34,7 @@ class Optimizer():
         self.static_seal = conversions.inch_to_m(0.5) #Assume 0.5 inch static seal
         self.annular_riser_area_ratio = 1.25 #Assume 1.25:1 annular riser area ratio
         self.A_da = conversions.sqft_to_m2(1.0) # Minimum area under downflow apron = 1sqft
+        self.slot_area_per_tray = conversions.sqft_to_m2(31.5) #Assume 31.5 sq ft total slot area per tray
 
     def func_net_area(self):
         return self.model.A_c - self.model.A_d
@@ -93,7 +94,7 @@ class Optimizer():
             return self.func_h_t(section) + self.h_w + self.func_h_ow('max', section) + self.func_delta() + self.func_h_da(section)
 
     def func_h_da(self, section):
-        Lw = conversions.m_to_inch(self.weir_length)
+        Lw = conversions.m_to_inch(self.model.weir_length)
         A_da = conversions.m2_to_sqft(self.A_da)
         return conversions.inch_to_m(0.03 * (Lw/2/100/A_da) ** 2)
 
@@ -145,7 +146,7 @@ class Optimizer():
         return u_v / self.func_flooding_vapour_velocity(section)
 
     def func_q_max(self, section):
-        As = 0.12 * conversions.m2_to_sqin(self.func_active_area())
+        As = 0.12 * conversions.m2_to_sqft(self.slot_area_per_tray)
         Rs = self.slot_shape_ratio
         slot_height = conversions.m_to_inch(self.slot_height)
         density_liquid = conversions.kgM3_to_lbFt3(self.func_density_liquid(section))
@@ -173,20 +174,20 @@ class Optimizer():
         return conversions.inch_to_m(1.3) #Assume delta of 1.3 inches
     
     def func_q(self, section):
-        A_da = conversions.m2_to_sqft(self.func_A_da(section))
+        A_da = conversions.m2_to_sqft(self.A_da)
         h_da = conversions.m_to_inch(self.func_h_da(section))
         g = conversions.m_to_ft(9.81)
         q = 0.6 * A_da * ((2 * g * h_da / 12)**(1./2))
-        return conversions.m3Sec_to_cfs(q)
+        return conversions.cfs_to_m3Sec(q)
 
     def func_t_dc (self, section):
-        A_d = conversions.m2_to_sqft(self.func_A_d(section))
+        A_d = conversions.m2_to_sqft(self.model.A_d(section))
         h_dc = conversions.m_to_inch(self.func_h_dc(section))
-        t_dc = A_d * h_dc / (12 * conversions.cfs_to_m3Sec(self.func_q(section)))
+        t_dc = A_d * h_dc / (12 * conversions.m3Sec_to_cfs(self.func_q(section)))
         return t_dc
 
     def func_h_c(self, section):
-        self.func_h_cd(section) + self.func_h_so(section)
+        return self.func_h_cd(section) + self.func_h_so(section)
 
     def func_h_ds(self, section):
         static_slot_seal = conversions.m_to_inch(self.static_seal)
@@ -231,9 +232,10 @@ class Optimizer():
     def downcomerResidenceTimeCheck(self, section):
         if self.model.tray_type == 'SIEVE':
             self.residence_time = (self.model.A_d * self.func_h_b(section) * (10 ** -3) * self.func_density_liquid(section)) / (self.func_max_liquid_flow_rate(section))
+            return (self.residence_time - 3)/10.0 # Should be larger than 3s # Scale for constraints
         elif self.model.tray_type == 'CAPS':
             self.residence_time = self.func_t_dc(section)
-        return (self.residence_time - 3)/10.0 # Should be larger than 3s # Scale for constraints
+            return (self.residence_time - 3)/1000.0 # Should be larger than 3s # Scale for constraints
 
     def slotOpeningCheckTop(self, x):
         return self.slotOpeningCheck('top')
