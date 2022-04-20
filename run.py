@@ -8,6 +8,7 @@ model = m.Model (
     N = 101,
     RR = 0.924,
     tray_spacing = 0.63636,
+    tray_type="SIEVE",
     tray_eff_1 = 0.5,
     tray_eff_2 = 0.5,
     feed_stage = 51,
@@ -19,7 +20,9 @@ model.run()
 print (model.TAC)
 
 # Optimize
-optimizer = opt.Optimizer(model, opt_tolerance=1e-3, hydraulics = True, recoveryLB=0.95, purityLB=0.95, tray_type='sieve')
+optimizer = opt.Optimizer(
+    model, opt_tolerance=1e-3, hydraulics = True,
+    recoveryLB=0.95, purityLB=0.95)
 print (optimizer.run())
 
 # model.obj.Close()

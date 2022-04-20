@@ -7,7 +7,7 @@ import graph
 import initialize
 
 class Optimizer():
-    def __init__(self, model: model.Model, opt_tolerance: float = 1e-5, hydraulics = True, tray_type = 'sieve', \
+    def __init__(self, model: model.Model, opt_tolerance: float = 1e-5, hydraulics = True, \
         purityLB: float = 0.99, purityUB: float = 1.0,\
             recoveryLB: float = 0.99, recoveryUB: float = 1.0):
         self.opt_tolerance = opt_tolerance
@@ -21,7 +21,6 @@ class Optimizer():
         self.purityUB = purityUB
         self.recoveryLB = recoveryLB
         self.recoveryUB = recoveryUB
-        self.tray_type = tray_type
 
         self.h_w = 50 #mm (Assumption)
         self.hole_diameter = 5 #mm (Assumption)
@@ -88,9 +87,9 @@ class Optimizer():
         return (self.h_w - 10) * self.model.weir_length * (10 ** -3) # Change to m
 
     def func_h_dc(self, section):
-        if self.tray_type == 'sieve':
+        if self.model.tray_type == 'SIEVE':
             return 166 * ((self.func_max_liquid_flow_rate(section) / (self.func_density_liquid(section) * (self.model.A_d if self.model.A_d<self.func_A_ap() else self.func_A_ap())))**2)
-        elif self.tray_type == 'bubblecap':
+        elif self.model.tray_type == 'CAPS':
             return self.func_h_t(section) + self.h_w + self.func_h_ow('max', section) + self.func_delta() + self.func_h_da(section)
 
     def func_h_da(self, section):
@@ -110,9 +109,9 @@ class Optimizer():
         return 12500 / self.func_density_liquid(section)
 
     def func_h_t(self, section):
-        if self.tray_type == 'sieve':
+        if self.model.tray_type == 'SIEVE':
             return self.func_h_d(section) + self.h_w + self.func_h_ow('max', section) + self.func_h_r(section)
-        elif self.tray_type == 'bubblecap':
+        elif self.model.tray_type == 'CAPS':
             return self.func_h_cd(section) + self.func_h_so(section) + self.func_h_al(section)
 
     def func_h_al(self, section):
@@ -133,7 +132,7 @@ class Optimizer():
         return (self.func_L(section) / self.func_v()) * ((self.func_density_vapour(section) / self.func_density_liquid(section)) ** (1./2))
 
     def func_flooding_vapour_velocity(self, section):
-        return graph.K1(self.func_f_lv(section), self.model.tray_spacing, self.tray_type) * (((self.func_density_liquid(section) - self.func_density_vapour(section))/self.func_density_vapour(section)) ** (1./2))
+        return graph.K1(self.func_f_lv(section), self.model.tray_spacing, self.model.tray_type) * (((self.func_density_liquid(section) - self.func_density_vapour(section))/self.func_density_vapour(section)) ** (1./2))
 
     def func_u_n(self, section):
         return self.frac_appr_flooding * self.func_flooding_vapour_velocity(section)
@@ -202,7 +201,7 @@ class Optimizer():
         return self.frac_appr_flooding - self.func_percent_flooding(section) # percent of flooding should be less than frac_appr_flooding
 
     def entrainmentFracCheck(self, section):
-        frac_entrainment = graph.frac(self.func_f_lv(section), self.func_percent_flooding(section),self.tray_type)
+        frac_entrainment = graph.frac(self.func_f_lv(section), self.func_percent_flooding(section),self.model.tray_type)
         return 0.1 - frac_entrainment # frac_entrainment should be less than 0.1
 
     def slotOpeningCheck(self, section):
@@ -224,15 +223,15 @@ class Optimizer():
         return (self.func_actual_min_vapour_vel(section) - self.func_min_vapour_vel(section))/5.0 # Scale for constraints
 
     def downcomerLiquidBackupCheck(self, section):
-        if self.tray_type == 'sieve':
+        if self.model.tray_type == 'SIEVE':
             return  0.5 * (self.model.tray_spacing + (self.h_w/1000)) - self.func_h_b(section)/1000 # Should be larger than 0 (pg 882 towler sinnot)
-        elif self.tray_type == 'bubblecap':
+        elif self.model.tray_type == 'CAPS':
             return self.model.tray_spacing + (self.h_w/1000) - self.func_h_fd(section)/1000 # Should be larger than 0
     
     def downcomerResidenceTimeCheck(self, section):
-        if self.tray_type == 'sieve':
+        if self.model.tray_type == 'SIEVE':
             self.residence_time = (self.model.A_d * self.func_h_b(section) * (10 ** -3) * self.func_density_liquid(section)) / (self.func_max_liquid_flow_rate(section))
-        elif self.tray_type == 'bubblecap':
+        elif self.model.tray_type == 'CAPS':
             self.residence_time = self.func_t_dc(section)
         return (self.residence_time - 3)/10.0 # Should be larger than 3s # Scale for constraints
 
@@ -318,7 +317,7 @@ class Optimizer():
                 self.model.tray_spacing,
                 ]
 
-            if self.tray_type == 'sieve':
+            if self.model.tray_type == 'SIEVE':
                 constraints = (
                     # Results Constraint
                     {'type': 'ineq', 'fun': lambda x: self.model.purity[self.model.main_component] - self.purityLB},
@@ -337,7 +336,7 @@ class Optimizer():
                     {'type': 'ineq', 'fun': self.entrainmentCheckBottom},
                     {'type': 'ineq', 'fun': self.entrainmentFracCheckBottom},
                 )
-            elif self.tray_type == 'bubblecap':
+            elif self.model.tray_type == 'CAPS':
                 constraints = (
                     # Results Constraint
                     {'type': 'ineq', 'fun': lambda x: self.model.purity[self.model.main_component] - self.purityLB},

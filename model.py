@@ -8,7 +8,7 @@ class Model:
     def __init__(self, filepath: str, main_component: str = None, \
         P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, \
             RR: float = None, distilate_rate: float = None, N: float = None, feed_stage: float = None, \
-                tray_spacing: float = None, num_pass: int = None, \
+                tray_spacing: float = None, tray_type: str = None, num_pass: int = None, \
                     tray_eff_1: float = None, tray_eff_2: float = None, n_years: int = None):
         """
         Design Parameters
@@ -36,6 +36,7 @@ class Model:
         self.N = N if N is not None else self.init_var()["N"]
         self.feed_stage = feed_stage if feed_stage is not None else self.init_var()["feed_stage"]
         self.tray_spacing = tray_spacing if tray_spacing is not None else self.init_var()["tray_spacing"]
+        self.tray_type = tray_type if tray_type is not None else self.init_var()["tray_type"]
         self.num_pass = num_pass if num_pass is not None else self.init_var()["num_pass"]
         self.P_cond = P_cond if P_cond is not None else self.init_var()["P_cond"]
         self.P_drop_1 = P_drop_1 if P_drop_1 is not None else self.init_var()["P_drop_1"]
@@ -67,6 +68,7 @@ class Model:
             N = 101, 
             feed_stage = 51, 
             tray_spacing = 0.6096, #Default from Aspen
+            tray_type = 'SIEVE'
             num_pass = 1,
             tray_eff_1 = 0.5,
             tray_eff_2 = 0.5,
@@ -78,7 +80,7 @@ class Model:
 
     def update_manipulated(self, P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, \
             RR: float = None, N: float = None, distilate_rate: float = None, feed_stage: float = None, 
-                tray_spacing: float = None, num_pass: int = None, \
+                tray_spacing: float = None, tray_type: str = None, num_pass: int = None, \
                     tray_eff_1: float = None, tray_eff_2: float = None, n_years: int = None):
         # Update manipulated variables
         self.RR = RR if RR is not None else self.RR
@@ -86,6 +88,7 @@ class Model:
         self.N = N if N is not None else self.N
         self.feed_stage = feed_stage if feed_stage is not None else self.feed_stage
         self.tray_spacing = tray_spacing if tray_spacing is not None else self.tray_spacing
+        self.tray_type = tray_type if tray_type is not None else self.tray_type
         self.num_pass = num_pass if num_pass is not None else self.num_pass
         self.tray_eff_1 = tray_eff_1 if tray_eff_1 is not None else self.tray_eff_1
         self.tray_eff_2 = tray_eff_2 if tray_eff_2 is not None else self.tray_eff_2
@@ -143,6 +146,7 @@ class Model:
         self.setValue(r"\Data\Blocks\B1\Input\NSTAGE", self.N)
         self.setValue(r"\Data\Blocks\B1\Input\FEED_STAGE\1", self.feed_stage)
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_TSPACE\1", self.tray_spacing)    
+        self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_TRAYTYPE\1", self.tray_type)    
         self.setValue(r"\Data\Blocks\B1\Input\BASIS_RR", self.RR)
         self.setValue(r"\Data\Blocks\B1\Input\BASIS_D", self.distilate_rate)
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_NPASS\1", self.num_pass)
