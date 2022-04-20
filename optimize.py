@@ -181,7 +181,7 @@ class Optimizer():
         return conversions.cfs_to_m3Sec(q)
 
     def func_t_dc (self, section):
-        A_d = conversions.m2_to_sqft(self.model.A_d(section))
+        A_d = conversions.m2_to_sqft(self.model.A_d)
         h_dc = conversions.m_to_inch(self.func_h_dc(section))
         t_dc = A_d * h_dc / (12 * conversions.m3Sec_to_cfs(self.func_q(section)))
         return t_dc
