@@ -68,7 +68,7 @@ class Model:
             N = 101, 
             feed_stage = 51, 
             tray_spacing = 0.6096, #Default from Aspen
-            tray_type = 'SIEVE'
+            tray_type = 'SIEVE',
             num_pass = 1,
             tray_eff_1 = 0.5,
             tray_eff_2 = 0.5,
