@@ -390,7 +390,7 @@ class Optimizer():
                     {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.model.main_component]},
                     {'type': 'ineq', 'fun': self.inputPresCheck},
                     )
-                bounds = opt.Bounds([1.013, initialize.min_RR(self.model), 0.1, 0.1], [10.0, 1.2 * initialize.min_RR(self.model), 1.0, 1.0], keep_feasible=True),
+                bounds = opt.Bounds([1.013, initialize.min_RR(self.model), 0.1, 0.1], [10.0, 1.2 * initialize.min_RR(self.model), 1.0, 1.0], keep_feasible=True)
                 print ('{0:4s}   {1:11s}   {2:11s}   {3:11s}   {4:11s}   {5:11s}   {6:11s}'.format('Iter', ' P_cond', 'RR', 'tray_eff_1', 'tray_eff_2', 'TAC', 'Runtime'))
                 print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:11s}   {6:3.9f}'.format("Init", x0[0], x0[1], x0[2], x0[3], "----", self.time))
 
