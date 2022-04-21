@@ -517,6 +517,7 @@ class Optimizer():
 
     def run(self):
         self.result = self.optimize()
+        print (self.result)
         self.process_results()
         self.model.close()
 
