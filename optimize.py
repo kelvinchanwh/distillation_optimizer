@@ -5,6 +5,7 @@ import scipy.optimize as opt
 import conversions
 import graph
 import initialize
+import time
 
 class Optimizer():
     def __init__(self, model: model.Model, opt_tolerance: float = 1e-5, \
@@ -13,6 +14,7 @@ class Optimizer():
         self.opt_tolerance = opt_tolerance
         self.model = model
         self.time = 0
+        self.start_time = time.time()
         self.func_iter = 0
         self.opt_iter = 0
 
@@ -458,10 +460,76 @@ class Optimizer():
             self.func_iter += 1
             return self.model.TAC + 2 * self.opt_tolerance
 
-    def run(self):
-        result = self.optimize()
-        print (result)
+    def process_results(self):
+        x = self.result.x
+       
+        if self.model.hydraulics == True:
+            num_stage = (int(x[4] * 51) + int(x[5] * 50))
+            feed_stage = (int(x[4] * 51))
+            rr = x[3]
+            P_cond = x[0]
+            P_drop_1 = x[1]
+            P_drop_2 = x[2]
+            tray_spacing = x[6]
 
+            self.model.N = num_stage
+            self.model.feed_stage = feed_stage
+            self.model.RR = rr
+            self.model.P_cond = P_cond
+            self.model.P_drop_1 = P_drop_1
+            self.model.P_drop_2 = P_drop_2
+            self.model.tray_spacing = tray_spacing
+            self.model.run()
+
+        else:
+            num_stage = (int(x[4] * 51) + int(x[5] * 50))
+            feed_stage = (int(x[4] * 51))
+            rr = x[3]
+            P_cond = x[0]
+            P_drop_1 = x[1]
+            tray_spacing = x[6]
+
+            self.model.N = num_stage
+            self.model.feed_stage = feed_stage
+            self.model.RR = rr
+            self.model.P_cond = P_cond
+            self.model.P_drop_1 = P_drop_1
+            self.model.tray_spacing = tray_spacing
+            self.model.run()
+
+        print ("\n==========")
+        print ("Computation")
+        print ("==========\n")
+        print ("Function Calculations: %d"%self.result.nfev)
+        print ("Objective Iterations: %d"%self.result.nit)
+        print ("Computational Time: %.2f seconds"%self.time)
+        print ("Total ElapsedTime: %.2f seconds"%(time.time() - self.start_time))
+        print ("Converged: %s"%self.result.success)
+
+        print ("\n==========")
+        print ("General")
+        print ("==========\n")
+        print ("Total Number of Stages: %d"%num_stage)
+        print ("Feed Stage: %d"%feed_stage)
+        print ("RR: %.4f"%rr)
+        print ("Tray Spacing: %.4f meters"%tray_spacing)
+        print ("TAC: $%.2f"%self.model.TAC)
+
+        print ("\n==========")
+        print ("Pressure")
+        print ("==========\n")
+        print ("Condenser Pressure: %.3f bar"%P_cond)
+        if self.model.hydraulics:
+            print ("Section 1 Pressure Drop: %.3f bar (per stage)"%P_drop_1)
+            print ("Section 2 Pressure Drop: %.3f bar (per stage)"%P_drop_2)
+        else:
+            print ("Column Pressure Drop: %.3f bar"%P_drop_1)
+
+
+    def run(self):
+        self.result = self.optimize()
+        self.process_results()
+        self.model.close()
 
 
 
