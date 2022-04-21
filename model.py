@@ -265,11 +265,11 @@ class Model:
     def calc_energy_cost(self, steam_type):
         energy_cost = 0.0
         # Energy cost
-        energy_cost = 0.354 * conversions.calPerSec_to_GJPerYear(self.Q_cond)
+        energy_cost = 0.354 * conversions.calPerSec_to_GJPerYear(abs(self.Q_cond))
         if steam_type == "hp":
-            energy_cost += 9.88 * conversions.calPerSec_to_GJPerYear(self.Q_reb)
+            energy_cost += 9.88 * conversions.calPerSec_to_GJPerYear(abs(self.Q_reb))
         else:
-            energy_cost += 7.78 * conversions.calPerSec_to_GJPerYear(self.Q_reb)
+            energy_cost += 7.78 * conversions.calPerSec_to_GJPerYear(abs(self.Q_reb))
 
         return energy_cost
 
