@@ -472,30 +472,19 @@ class Optimizer():
             P_drop_2 = x[2]
             tray_spacing = x[6]
 
-            self.model.N = num_stage
-            self.model.feed_stage = feed_stage
-            self.model.RR = rr
-            self.model.P_cond = P_cond
-            self.model.P_drop_1 = P_drop_1
-            self.model.P_drop_2 = P_drop_2
-            self.model.tray_spacing = tray_spacing
-            self.model.run()
-
         else:
-            num_stage = (int(x[4] * 51) + int(x[5] * 50))
-            feed_stage = (int(x[4] * 51))
-            rr = x[3]
+            if self.model.const_pres:
+                num_stage = (int(x[2] * 51) + int(x[3] * 50))
+                feed_stage = (int(x[2] * 51))
+                rr = x[1]
+                P_drop_1 = 0
+            else:
+                num_stage = (int(x[3] * 51) + int(x[4] * 50))
+                feed_stage = (int(x[3] * 51))
+                rr = x[2]
+                P_drop_1 = x[1]
             P_cond = x[0]
-            P_drop_1 = x[1]
-            tray_spacing = x[6]
-
-            self.model.N = num_stage
-            self.model.feed_stage = feed_stage
-            self.model.RR = rr
-            self.model.P_cond = P_cond
-            self.model.P_drop_1 = P_drop_1
-            self.model.tray_spacing = tray_spacing
-            self.model.run()
+            tray_spacing = self.model.tray_spacing
 
         print ("\n==========")
         print ("Computation")
@@ -513,7 +502,7 @@ class Optimizer():
         print ("Feed Stage: %d"%feed_stage)
         print ("RR: %.4f"%rr)
         print ("Tray Spacing: %.4f meters"%tray_spacing)
-        print ("TAC: $%.2f"%self.model.TAC)
+        print ("TAC: $%.2f"%(self.result.fun*1000000))
 
         print ("\n==========")
         print ("Pressure")
