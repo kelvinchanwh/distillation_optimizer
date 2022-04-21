@@ -146,7 +146,7 @@ class Model:
                 self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
         else:
             self.setValue("\\Data\\Blocks\\B1\\Input\\VIEW_PRES", "TOP/BOTTOM")
-            self.setValue("\\Data\\Blocks\\B1\\Input\\DP_STAGE", self.P_drop_1)
+            self.setValue("\\Data\\Blocks\\B1\\Input\\DP_COL", self.P_drop_1)
         # Hydraulic Ending Stage = N - 1
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_STAGE2\1", self.N - 1)
 
