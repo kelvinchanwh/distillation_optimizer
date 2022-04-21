@@ -6,7 +6,7 @@ import collections
 import initialize
 class Model:
     def __init__(self, filepath: str, main_component: str = None, hydraulics: bool = None,\
-        P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, \
+        P_cond: float = None, P_drop_1: float = None, P_drop_2: float = None, const_pres: bool = None,\
             RR: float = None, distilate_rate: float = None, N: float = None, feed_stage: float = None, \
                 tray_spacing: float = None, tray_type: str = None, num_pass: int = None, \
                     tray_eff_1: float = None, tray_eff_2: float = None, n_years: int = None):
@@ -39,13 +39,15 @@ class Model:
         self.tray_type = tray_type if tray_type is not None else self.init_var()["tray_type"]
         self.num_pass = num_pass if num_pass is not None else self.init_var()["num_pass"]
         self.P_cond = P_cond if P_cond is not None else self.init_var()["P_cond"]
+        self.const_pres = const_pres if const_pres is not None else self.init_var()["const_pres"]
         self.P_drop_1 = P_drop_1 if P_drop_1 is not None else self.init_var()["P_drop_1"]
         self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.init_var()["P_drop_2"]
         self.hydraulics = hydraulics if hydraulics is not None else self.init_var()["hydraulics"]
 
-        # Minimum pressure drop is 0.01 bar
-        self.P_drop_1 = 0.01 if self.P_drop_1 == 0 else self.P_drop_1
-        self.P_drop_2 = 0.01 if self.P_drop_2 == 0 else self.P_drop_2
+        if not self.const_pres:
+            # Minimum pressure drop is 0.01 bar
+            self.P_drop_1 = 0.01 if self.P_drop_1 == 0 else self.P_drop_1
+            self.P_drop_2 = 0.01 if self.P_drop_2 == 0 else self.P_drop_2
 
         self.tray_eff_1 = tray_eff_1 if tray_eff_1 is not None else self.init_var()["tray_eff_1"]
         self.tray_eff_2 = tray_eff_2 if tray_eff_2 is not None else self.init_var()["tray_eff_2"]
@@ -74,6 +76,7 @@ class Model:
             tray_eff_1 = 0.5,
             tray_eff_2 = 0.5,
             P_cond = 1.013, #Atmospheric Pressure (bar)
+            const_pres = True,
             P_drop_1 = 0,
             P_drop_2 = 0,
             n_years = 3,
@@ -146,7 +149,10 @@ class Model:
                 self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
         else:
             self.setValue("\\Data\\Blocks\\B1\\Input\\VIEW_PRES", "TOP/BOTTOM")
-            self.setValue("\\Data\\Blocks\\B1\\Input\\DP_COL", self.P_drop_1)
+            if self.const_pres:
+                self.setValue("\\Data\\Blocks\\B1\\Input\\DP_COL", 0)
+            else:
+                self.setValue("\\Data\\Blocks\\B1\\Input\\DP_COL", self.P_drop_1)
         # Hydraulic Ending Stage = N - 1
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_STAGE2\1", self.N - 1)
 
