@@ -44,7 +44,7 @@ class Model:
         self.P_drop_2 = P_drop_2 if P_drop_2 is not None else self.init_var()["P_drop_2"]
         self.hydraulics = hydraulics if hydraulics is not None else self.init_var()["hydraulics"]
 
-        if not self.const_pres:
+        if self.hydraulics:
             # Minimum pressure drop is 0.01 bar
             self.P_drop_1 = 0.01 if self.P_drop_1 == 0 else self.P_drop_1
             self.P_drop_2 = 0.01 if self.P_drop_2 == 0 else self.P_drop_2
@@ -149,7 +149,7 @@ class Model:
                 self.setValue(r"\Data\Blocks\B1\Input\PRES_STAGE2\2", self.P_end_2)
         else:
             self.setValue("\\Data\\Blocks\\B1\\Input\\VIEW_PRES", "TOP/BOTTOM")
-            if self.const_pres:
+            if self.const_pres and self.hydraulics == False:
                 self.setValue("\\Data\\Blocks\\B1\\Input\\DP_COL", 0)
             else:
                 self.setValue("\\Data\\Blocks\\B1\\Input\\DP_COL", self.P_drop_1)
