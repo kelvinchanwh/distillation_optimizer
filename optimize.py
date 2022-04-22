@@ -485,6 +485,11 @@ class Optimizer():
                 P_drop_1 = x[1]
             P_cond = x[0]
             tray_spacing = self.model.tray_spacing
+        diameter = self.model.diameter
+        Q_cond = conversions.calPerSec_to_kJPerSec(abs(self.model.Q_cond))
+        Q_reb = conversions.calPerSec_to_kJPerSec(abs(self.model.Q_reb))
+        energy_cost = self.model.calc_energy_cost("hp" if self.model.T_stage[-2] > 150 else "lp")
+        capital_cost = ((self.result.fun*1000000) - energy_cost) * self.model.n_years
 
         print ("\n==========")
         print ("Computation")
@@ -502,6 +507,11 @@ class Optimizer():
         print ("Feed Stage: %d"%feed_stage)
         print ("RR: %.4f"%rr)
         print ("Tray Spacing: %.4f meters"%tray_spacing)
+        print ("Column Diameter: %.4f meters"%diameter)
+        print ("Q Condenser: %.4f kJPerSec"%Q_cond)
+        print ("Q Reboiler: %.4f kJPerSec"%Q_reb)
+        print ("Energy Cost: %.4f USD per annum"%energy_cost)
+        print ("Capital Cost: %.4f USD"%capital_cost)
         print ("TAC: $%.2f"%(self.result.fun*1000000))
 
         print ("\n==========")
