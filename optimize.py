@@ -438,10 +438,17 @@ class Optimizer():
                 self.model.tray_eff_2 = float(x[5])
                 self.model.tray_spacing = float(x[6])
             else:
-                self.model.P_cond = float(x[0])
-                self.model.RR = float(x[1])
-                self.model.tray_eff_1 = float(x[2])
-                self.model.tray_eff_2 = float(x[3])
+                if self.model.const_pres:
+                    self.model.P_cond = float(x[0])
+                    self.model.RR = float(x[1])
+                    self.model.tray_eff_1 = float(x[2])
+                    self.model.tray_eff_2 = float(x[3])
+                else:
+                    self.model.P_cond = float(x[0])
+                    self.model.P_drop_1 = float(x[1])
+                    self.model.RR = float(x[2])
+                    self.model.tray_eff_1 = float(x[3])
+                    self.model.tray_eff_2 = float(x[4])
             runtime = self.model.run()
             self.time += runtime
             self.func_iter += 1
