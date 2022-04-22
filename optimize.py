@@ -233,7 +233,7 @@ class Optimizer():
     def downcomerResidenceTimeCheck(self, section):
         if self.model.tray_type == 'SIEVE':
             self.residence_time = (self.model.A_d * self.func_h_b(section) * (10 ** -3) * self.func_density_liquid(section)) / (self.func_max_liquid_flow_rate(section))
-            return (self.residence_time - 3)/10.0 # Should be larger than 3s # Scale for constraints
+            return (self.residence_time - 3)/100.0 # Should be larger than 3s # Scale for constraints
         elif self.model.tray_type == 'CAPS':
             self.residence_time = self.func_t_dc(section)
             return (self.residence_time - 3)/1000.0 # Should be larger than 3s # Scale for constraints
@@ -370,7 +370,7 @@ class Optimizer():
                     {'type': 'ineq', 'fun': self.downcomerLiquidBackupCheckBottom},
                     {'type': 'ineq', 'fun': self.downcomerResidenceTimeCheckBottom},
                 )
-            bounds = opt.Bounds([1.013, 0.01, 0.01, initialize.min_RR(self.model), 0.1, 0.1, 0.15], [10.0, 1.0, 1.0, 1.2 * initialize.min_RR(self.model), 1.0, 1.0, 1.0], keep_feasible=True)
+            bounds = opt.Bounds([1.013, 0.01, 0.01, initialize.min_RR(self.model), 0.02, 0.02, 0.15], [10.0, 1.0, 1.0, 1.2 * initialize.min_RR(self.model), 1.0, 1.0, 1.0], keep_feasible=True)
             print ('{0:4s}   {1:11s}   {2:11s}   {3:11s}   {4:11s}   {5:11s}   {6:11s}   {7:11s}   {8:11s}   {9:11s}'.format('Iter', ' P_cond', 'P_drop_1', 'P_drop_2', 'RR', 'tray_eff_1', 'tray_eff_2', 'tray_spacing', 'TAC', 'Runtime'))
             print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:11s}   {9:3.9f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], "----", self.time))
         else:
@@ -390,7 +390,7 @@ class Optimizer():
                     {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.model.main_component]},
                     {'type': 'ineq', 'fun': self.inputPresCheck},
                     )
-                bounds = opt.Bounds([1.013, initialize.min_RR(self.model), 0.1, 0.1], [10.0, 1.2 * initialize.min_RR(self.model), 1.0, 1.0], keep_feasible=True)
+                bounds = opt.Bounds([1.013, initialize.min_RR(self.model), 0.02, 0.02], [10.0, 1.2 * initialize.min_RR(self.model), 1.0, 1.0], keep_feasible=True)
                 print ('{0:4s}   {1:11s}   {2:11s}   {3:11s}   {4:11s}   {5:11s}   {6:11s}'.format('Iter', ' P_cond', 'RR', 'tray_eff_1', 'tray_eff_2', 'TAC', 'Runtime'))
                 print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:11s}   {6:3.9f}'.format("Init", x0[0], x0[1], x0[2], x0[3], "----", self.time))
 
@@ -411,7 +411,7 @@ class Optimizer():
                     {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.model.main_component]},
                     {'type': 'ineq', 'fun': self.inputPresCheck},
                     )
-                bounds = opt.Bounds([1.013, 0, initialize.min_RR(self.model), 0.1, 0.1], [10.0, 10.0, 1.2 * initialize.min_RR(self.model), 1.0, 1.0], keep_feasible=True)
+                bounds = opt.Bounds([1.013, 0, initialize.min_RR(self.model), 0.02, 0.02], [10.0, 10.0, 1.2 * initialize.min_RR(self.model), 1.0, 1.0], keep_feasible=True)
                 print ('{0:4s}   {1:11s}   {2:11s}   {3:11s}   {4:11s}   {5:11s}   {6:11s}   {7:11s}'.format('Iter', ' P_cond', ' P_drop', 'RR', 'tray_eff_1', 'tray_eff_2', 'TAC', 'Runtime'))
                 print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:11s}   {7:3.9f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4], "----", self.time))
 
