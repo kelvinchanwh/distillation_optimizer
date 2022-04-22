@@ -458,7 +458,7 @@ class Optimizer():
 
             print (e)
             self.func_iter += 1
-            return self.model.TAC + 2 * self.opt_tolerance
+            return self.model.TAC/1000000 + 2 * self.opt_tolerance
 
     def process_results(self):
         x = self.result.x
