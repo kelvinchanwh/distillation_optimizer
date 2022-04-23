@@ -14,8 +14,7 @@ model = m.Model (
     feed_stage = 51,
     P_cond = 1.013,
     main_component = "BENZENE",
-    hydraulics = True,
-    const_pres=False
+    hydraulics = True
 )
 
 model.run()

@@ -305,10 +305,7 @@ class Optimizer():
         if self.model.hydraulics:
             print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:3.9f}   {9:3.9f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], self.model.TAC, self.time))
         else:
-            if self.model.const_pres:
-                print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], self.model.TAC, self.time))
-            else:
-                print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], x[4], self.model.TAC, self.time))
+            print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}'.format(self.opt_iter, x[0], x[1], x[2], x[3], self.model.TAC, self.time))
         self.opt_iter += 1
 
     def optimize(self):
@@ -374,46 +371,24 @@ class Optimizer():
             print ('{0:4s}   {1:11s}   {2:11s}   {3:11s}   {4:11s}   {5:11s}   {6:11s}   {7:11s}   {8:11s}   {9:11s}'.format('Iter', ' P_cond', 'P_drop_1', 'P_drop_2', 'RR', 'tray_eff_1', 'tray_eff_2', 'tray_spacing', 'TAC', 'Runtime'))
             print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:11s}   {9:3.9f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], "----", self.time))
         else:
-            if self.model.const_pres:
-                x0 = [
-                    self.model.P_cond,
-                    initialize.min_RR(self.model), 
-                    initialize.feed_stage(self.model, self.recoveryLB) / initialize.actual_N(self.model, self.recoveryLB), 
-                    1 - (initialize.feed_stage(self.model, self.recoveryLB) / initialize.actual_N(self.model, self.recoveryLB)),
-                    ]
+            x0 = [
+                self.model.P_cond,
+                initialize.min_RR(self.model), 
+                initialize.feed_stage(self.model, self.recoveryLB) / initialize.actual_N(self.model, self.recoveryLB), 
+                1 - (initialize.feed_stage(self.model, self.recoveryLB) / initialize.actual_N(self.model, self.recoveryLB)),
+                ]
 
-                constraints = (
-                    # Results Constraint
-                    {'type': 'ineq', 'fun': lambda x: self.model.purity[self.model.main_component] - self.purityLB},
-                    {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.model.main_component]},
-                    {'type': 'ineq', 'fun': lambda x: self.model.recovery[self.model.main_component] - self.recoveryLB},
-                    {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.model.main_component]},
-                    {'type': 'ineq', 'fun': self.inputPresCheck},
-                    )
-                bounds = opt.Bounds([1.013, initialize.min_RR(self.model), 0.02, 0.02], [10.0, 1.2 * initialize.min_RR(self.model), 1.0, 1.0], keep_feasible=True)
-                print ('{0:4s}   {1:11s}   {2:11s}   {3:11s}   {4:11s}   {5:11s}   {6:11s}'.format('Iter', ' P_cond', 'RR', 'tray_eff_1', 'tray_eff_2', 'TAC', 'Runtime'))
-                print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:11s}   {6:3.9f}'.format("Init", x0[0], x0[1], x0[2], x0[3], "----", self.time))
-
-            else:
-                x0 = [
-                    self.model.P_cond,
-                    self.model.P_drop_1,
-                    initialize.min_RR(self.model), 
-                    initialize.feed_stage(self.model, self.recoveryLB) / initialize.actual_N(self.model, self.recoveryLB), 
-                    1 - (initialize.feed_stage(self.model, self.recoveryLB) / initialize.actual_N(self.model, self.recoveryLB)),
-                    ]
-
-                constraints = (
-                    # Results Constraint
-                    {'type': 'ineq', 'fun': lambda x: self.model.purity[self.model.main_component] - self.purityLB},
-                    {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.model.main_component]},
-                    {'type': 'ineq', 'fun': lambda x: self.model.recovery[self.model.main_component] - self.recoveryLB},
-                    {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.model.main_component]},
-                    {'type': 'ineq', 'fun': self.inputPresCheck},
-                    )
-                bounds = opt.Bounds([1.013, 0, initialize.min_RR(self.model), 0.02, 0.02], [10.0, 10.0, 1.2 * initialize.min_RR(self.model), 1.0, 1.0], keep_feasible=True)
-                print ('{0:4s}   {1:11s}   {2:11s}   {3:11s}   {4:11s}   {5:11s}   {6:11s}   {7:11s}'.format('Iter', ' P_cond', ' P_drop', 'RR', 'tray_eff_1', 'tray_eff_2', 'TAC', 'Runtime'))
-                print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:11s}   {7:3.9f}'.format("Init", x0[0], x0[1], x0[2], x0[3], x0[4], "----", self.time))
+            constraints = (
+                # Results Constraint
+                {'type': 'ineq', 'fun': lambda x: self.model.purity[self.model.main_component] - self.purityLB},
+                {'type': 'ineq', 'fun': lambda x: self.purityUB - self.model.purity[self.model.main_component]},
+                {'type': 'ineq', 'fun': lambda x: self.model.recovery[self.model.main_component] - self.recoveryLB},
+                {'type': 'ineq', 'fun': lambda x: self.recoveryUB - self.model.recovery[self.model.main_component]},
+                {'type': 'ineq', 'fun': self.inputPresCheck},
+                )
+            bounds = opt.Bounds([1.013, initialize.min_RR(self.model), 0.02, 0.02], [10.0, 1.2 * initialize.min_RR(self.model), 1.0, 1.0], keep_feasible=True)
+            print ('{0:4s}   {1:11s}   {2:11s}   {3:11s}   {4:11s}   {5:11s}   {6:11s}'.format('Iter', ' P_cond', 'RR', 'tray_eff_1', 'tray_eff_2', 'TAC', 'Runtime'))
+            print ('{0:4s}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:11s}   {6:3.9f}'.format("Init", x0[0], x0[1], x0[2], x0[3], "----", self.time))
 
         result = opt.minimize(
             self.objective,
@@ -438,17 +413,11 @@ class Optimizer():
                 self.model.tray_eff_2 = float(x[5])
                 self.model.tray_spacing = float(x[6])
             else:
-                if self.model.const_pres:
-                    self.model.P_cond = float(x[0])
-                    self.model.RR = float(x[1])
-                    self.model.tray_eff_1 = float(x[2])
-                    self.model.tray_eff_2 = float(x[3])
-                else:
-                    self.model.P_cond = float(x[0])
-                    self.model.P_drop_1 = float(x[1])
-                    self.model.RR = float(x[2])
-                    self.model.tray_eff_1 = float(x[3])
-                    self.model.tray_eff_2 = float(x[4])
+                self.model.P_cond = float(x[0])
+                self.model.P_drop_1 = 0.06
+                self.model.RR = float(x[1])
+                self.model.tray_eff_1 = float(x[2])
+                self.model.tray_eff_2 = float(x[3])
             runtime = self.model.run()
             self.time += runtime
             self.func_iter += 1
@@ -458,10 +427,7 @@ class Optimizer():
             if self.model.hydraulics:
                 print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:3.9f}   {7:3.9f}   {8:11s}   {9:3.9f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], x[5], x[6], "ERROR", self.time))
             else:
-                if self.model.const_pres:
-                    print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:11s}   {6:3.9f}'.format(self.func_iter, x[0], x[1], x[2], x[3], "ERROR", self.time))
-                else:
-                    print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:3.9f}   {6:11s}   {7:3.9f}'.format(self.func_iter, x[0], x[1], x[2], x[3], x[4], "ERROR", self.time))
+                print ('{0:4d}   {1:3.9f}   {2:3.9f}   {3:3.9f}   {4:3.9f}   {5:11s}   {6:3.9f}'.format(self.func_iter, x[0], x[1], x[2], x[3], "ERROR", self.time))
 
             print (e)
             self.func_iter += 1
@@ -480,16 +446,10 @@ class Optimizer():
             tray_spacing = x[6]
 
         else:
-            if self.model.const_pres:
-                num_stage = (int(x[2] * 51) + int(x[3] * 50))
-                feed_stage = (int(x[2] * 51))
-                rr = x[1]
-                P_drop_1 = 0
-            else:
-                num_stage = (int(x[3] * 51) + int(x[4] * 50))
-                feed_stage = (int(x[3] * 51))
-                rr = x[2]
-                P_drop_1 = x[1]
+            num_stage = (int(x[2] * 51) + int(x[3] * 50))
+            feed_stage = (int(x[2] * 51))
+            rr = x[1]
+            P_drop_1 = 0
             P_cond = x[0]
             tray_spacing = self.model.tray_spacing
         diameter = self.model.diameter
