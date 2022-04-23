@@ -310,10 +310,14 @@ class Model:
         C_cap_reb = 7296 * (A_reb ** 0.65)
         C_cap_hx = C_cap_cond + C_cap_reb
         C_cap_col = 17640 * (self.diameter ** 1.066) * (self.height ** 0.802)
+        if self.tray_type == "SIEVE":
+            C_cap_tray = 130 + 440 * (self.diameter ** (1.8)) * self.N * 0.5 * (self.tray_eff_1 + self.tray_eff_2)
+        elif self.tray_type == "CAPS":
+            C_cap_tray = 340 + 640 * (self.diameter ** (1.9)) * self.N * 0.5 * (self.tray_eff_1 + self.tray_eff_2)
 
         self.energy_cost = self.calc_energy_cost(steam)
 
-        self.TAC = ((C_cap_hx + C_cap_col) / self.n_years) + self.energy_cost
+        self.TAC = ((C_cap_hx + C_cap_col + C_cap_tray) / self.n_years) + self.energy_cost
 
     def run(self):
         start_time = time.time()
