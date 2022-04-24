@@ -159,10 +159,6 @@ class Model:
         self.setValue(r"\Data\Blocks\B1\Input\BASIS_RR", self.RR)
         self.setValue(r"\Data\Blocks\B1\Input\BASIS_D", self.distilate_rate)
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_NPASS\1", self.num_pass)
-        self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_start_1, self.tray_eff_1)
-        self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_end_1, self.tray_eff_1)
-        self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_start_2, self.tray_eff_2)
-        self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_end_2, self.tray_eff_2)
 
     def simulate(self):
         """
