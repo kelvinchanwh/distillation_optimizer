@@ -159,10 +159,6 @@ class Model:
         self.setValue(r"\Data\Blocks\B1\Input\BASIS_RR", self.RR)
         self.setValue(r"\Data\Blocks\B1\Input\BASIS_D", self.distilate_rate)
         self.setValue(r"\Data\Blocks\B1\Subobjects\Tray Sizing\1\Input\TS_NPASS\1", self.num_pass)
-        self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_start_1, self.tray_eff_1)
-        self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_end_1, self.tray_eff_1)
-        self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_start_2, self.tray_eff_2)
-        self.setValue("\\Data\\Blocks\\B1\\Input\\STAGE_EFF\\%d"%self.P_end_2, self.tray_eff_2)
 
     def simulate(self):
         """
@@ -195,7 +191,7 @@ class Model:
 
         # List of output variables
         blockOutput = ["COND_DUTY", "REB_DUTY", "B_PRES", "B_TEMP", "B_K", "PROD_LFLOW", \
-            "HYD_MWL", "HYD_MWV", "HYD_RHOL", "HYD_RHOV", "HYD_VVF", "HYD_LVF"]
+            "HYD_MWL", "HYD_MWV", "HYD_RHOL", "HYD_RHOV", "HYD_VVF", "HYD_LVF", "LIQ_FLOW_FRM", "VAP_FLOW_FRM"]
 
         streamOutput = ["MOLEFLMX", "MOLEFLOW", "STR_MAIN"]
 
@@ -229,6 +225,8 @@ class Model:
         self.density_vapour = list(self.blockOutput["HYD_RHOV"].values()) # gm_cc
         self.volume_flow_vapour = list(self.blockOutput["HYD_VVF"].values()) #l_min
         self.volume_flow_liquid = list(self.blockOutput["HYD_LVF"].values()) #l_min
+        self.liq_flow_from = list(self.blockOutput["LIQ_FLOW_FRM"].values()) #kmol_hr
+        self.vap_flow_from = list(self.blockOutput["VAP_FLOW_FRM"].values()) #kmol_hr
         self.Q_cond = self.blockOutput["COND_DUTY"] # cal_sec
         self.Q_reb = self.blockOutput["REB_DUTY"] #  cal_sec
         self.D = list(self.blockOutput["PROD_LFLOW"].values()) #kmol_hr
@@ -293,7 +291,8 @@ class Model:
 
         del_t_mean_cond = (0.5 * (t_in_hot_cond - t_out_cold_cond) * (t_out_hot_cond - t_in_cold_cond) * (t_in_hot_cond - t_out_cold_cond + t_out_hot_cond - t_in_cold_cond)) ** (1./3)
         del_t_mean_reb = (0.5 * (t_in_hot_reb - t_out_cold_reb) * (t_out_hot_reb - t_in_cold_reb) * (t_in_hot_reb - t_out_cold_reb + t_out_hot_reb - t_in_cold_reb)) ** (1./3)
-
+        
+        
         U_cond = 0.852
         U_reb = 0.568
         A_cond = abs(conversions.calPerSec_to_kJPerSec(self.Q_cond))/(U_cond * del_t_mean_cond)
