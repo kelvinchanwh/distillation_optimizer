@@ -95,7 +95,7 @@ class Optimizer():
             return self.func_h_t(section) + self.h_w + self.func_h_ow('max', section) + self.func_delta() + self.func_h_da(section)
 
     def func_h_da(self, section):
-        Lw = conversions.m_to_inch(self.model.weir_length)
+        Lw = conversions.m3Sec_to_gpm(self.func_q(section))
         A_da = conversions.m2_to_sqft(self.A_da)
         return conversions.inch_to_m(0.03 * (Lw/2/100/A_da) ** 2)
 

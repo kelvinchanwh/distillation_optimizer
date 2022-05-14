@@ -58,6 +58,12 @@ def cfs_to_m3Sec(cfs):
 def m3Sec_to_cfs(m3_sec):
     return m3_sec / 0.028316847
 
+def m3Sec_to_gpm(m3_sec):
+    return m3_sec * 15850.3
+
+def gpm_to_m3Sec(gpm):
+    return gpm / 15850.3
+
 def sqft_to_m2(sqft):
     return sqft * 0.09290304
 
